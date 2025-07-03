@@ -2021,10 +2021,12 @@ fun TelaClienteFirebase(
     val clienteState = rememberClienteState(viewModel)
     val context = LocalContext.current
 
-    // Busca o cliente na lista e carrega transações
+    // Carrega o cliente e transações
     LaunchedEffect(clienteId, clienteState.clientes) {
-        clienteState.onClienteChange(clienteState.clientes.find { it.id == clienteId })
-        if (clienteState.cliente != null) {
+        val clienteEncontrado = clienteState.clientes.find { it.id == clienteId }
+        clienteState.onClienteChange(clienteEncontrado)
+
+        if (clienteEncontrado != null) {
             viewModel.carregarTransacoes(clienteId)
         }
     }
@@ -2062,12 +2064,15 @@ fun TelaClienteFirebase(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
+                // Saldo do cliente
                 item {
                     ClienteSaldoCard(
                         cliente = clienteState.cliente,
                         saldoVisivel = clienteState.saldoVisivel
                     )
                 }
+
+                // Área de compra
                 stickyHeader {
                     ClienteCompraCard(
                         cliente = clienteState.cliente,
@@ -2085,12 +2090,16 @@ fun TelaClienteFirebase(
                         }
                     )
                 }
+
+                // Cabeçalho do extrato
                 item {
                     ClienteExtratoHeader(
                         isAdmin = clienteState.isAdmin,
                         onRemoveClick = { clienteState.onShowRemoveDialogChange(true) }
                     )
                 }
+
+                // Lista de transações
                 if (clienteState.transacoes.isEmpty()) {
                     item {
                         Card(
@@ -2098,19 +2107,37 @@ fun TelaClienteFirebase(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                         ) {
-                            Text(
-                                text = "Nenhuma transação realizada",
+                            Column(
                                 modifier = Modifier.padding(16.dp),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("📝", style = MaterialTheme.typography.headlineMedium)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Nenhuma transação realizada ainda",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "As compras e créditos aparecerão aqui",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 } else {
-                    items(clienteState.transacoes.size) { index ->
-                        ClienteTransacaoItem(transacao = clienteState.transacoes[index])
+                    items(
+                        items = clienteState.transacoes,
+                        key = { transacao -> transacao.id }
+                    ) { transacao ->
+                        ClienteTransacaoItem(transacao = transacao)
                     }
                 }
+
+                // Espaço no final para navegação
                 item {
                     Spacer(modifier = Modifier.height(80.dp))
                 }
@@ -2308,7 +2335,7 @@ private fun ClienteCompraCard(
             .fillMaxWidth()
             .padding(horizontal = 6.dp, vertical = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = CoresPastel.AzulSage
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
@@ -2359,6 +2386,8 @@ private fun ClienteCompraButton(
         modifier = Modifier.fillMaxWidth(),
         enabled = !isCarregando && valorOperacao.isNotEmpty(),
         colors = ButtonDefaults.buttonColors(
+            disabledContainerColor = CoresPastel.CinzaPerola,
+            disabledContentColor = CoresTexto.Secundario,
             containerColor = CoresPastel.VerdeMenta,
             contentColor = CoresTexto.Principal
         )
@@ -2450,7 +2479,9 @@ private fun ClienteTransacaoItem(transacao: TransacaoFirebase) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(
+                containerColor = CoresPastel.PessegoPastel)
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
@@ -2465,7 +2496,7 @@ private fun ClienteTransacaoItem(transacao: TransacaoFirebase) {
                         Locale.getDefault()
                     ).format(transacao.data.toDate()),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = CoresTexto.Principal
                 )
                 Text(
                     text = "${if (transacao.tipo == "CREDITO") "+" else "-"} R$ %.2f".format(transacao.valor),
@@ -2479,7 +2510,7 @@ private fun ClienteTransacaoItem(transacao: TransacaoFirebase) {
             Text(
                 text = "Por: ${transacao.funcionarioNome}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = CoresTexto.Principal
             )
         }
     }
