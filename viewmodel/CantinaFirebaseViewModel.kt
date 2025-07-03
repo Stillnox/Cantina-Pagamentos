@@ -60,9 +60,75 @@ class CantinaFirebaseViewModel : ViewModel() {
     private val _mensagem = MutableSharedFlow<String>()
     val mensagem: SharedFlow<String> = _mensagem.asSharedFlow()
 
+    // Estado de visibilidade do saldo
+    private val _saldoVisivel = MutableStateFlow(true)
+    val saldoVisivel: StateFlow<Boolean> = _saldoVisivel.asStateFlow()
+
+    // Estado de admin (otimizado para evitar verificações repetidas)
+    private val _isAdmin = MutableStateFlow(false)
+    val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
+
+
     init {
         // Quando o ViewModel inicia, começa a observar os clientes
         observarClientes()
+        // Observa mudanças no estado de autenticação para atualizar o status de admin
+        observarStatusAdmin()
+    }
+
+    // ===== ESTADO DE VISUALIZAÇÃO DE SALDO =====
+
+    /**
+     * Estado que controla se o saldo deve ser exibido ou ocultado
+     */
+
+
+    /**
+     * Observa mudanças no estado de autenticação para atualizar o status de admin
+     * Isso evita verificações repetidas a cada chamada de isadmin()
+     */
+    private fun observarStatusAdmin() {
+        viewModelScope.launch {
+            estadoAutenticacao.collect { estado ->
+                when (estado) {
+                    is EstadoAutenticacao.Autenticado -> {
+                        _isAdmin.value = estado.funcionario.isadmin
+                    }
+                    else -> {
+                        _isAdmin.value = false
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Alterna a visibilidade do saldo
+     */
+    fun alternarVisibilidadeSaldo() {
+        val novoValor = !_saldoVisivel.value
+        println("🔥 [ViewModel] Alternando visibilidade do saldo: ${_saldoVisivel.value} -> $novoValor")
+        _saldoVisivel.value = novoValor
+
+        viewModelScope.launch {
+            _mensagem.emit("Saldo ${if (novoValor) "visível" else "oculto"}")
+        }
+    }
+
+    // ===== FUNÇÕES DE CLIENTES =====
+
+    /**
+     * Busca clientes por nome
+     * Agora a busca é feita localmente na lista já carregada
+     */
+    fun buscarClientesPorNome(nome: String): List<ClienteFirebase> {
+        return if (nome.isEmpty()) {
+            _clientes.value
+        } else {
+            _clientes.value.filter {
+                it.nomeCompleto.contains(nome, ignoreCase = true)
+            }
+        }
     }
 
     /**
@@ -141,8 +207,9 @@ class CantinaFirebaseViewModel : ViewModel() {
 
     /**
      * Verifica se o usuário atual é admin
+     * Usa estado em cache para evitar verificações repetidas
      */
-    fun isadmin(): Boolean = servicoAuth.isAdmin()
+    fun isadmin(): Boolean = _isAdmin.value
 
     /**
      * Retorna o nome do funcionário logado
@@ -152,20 +219,6 @@ class CantinaFirebaseViewModel : ViewModel() {
     }
 
     // ===== FUNÇÕES DE CLIENTES =====
-
-    /**
-     * Busca clientes por nome
-     * Agora a busca é feita localmente na lista já carregada
-     */
-    fun buscarClientesPorNome(nome: String): List<ClienteFirebase> {
-        return if (nome.isEmpty()) {
-            _clientes.value
-        } else {
-            _clientes.value.filter {
-                it.nomeCompleto.contains(nome, ignoreCase = true)
-            }
-        }
-    }
 
     /**
      * Cria um novo cliente
