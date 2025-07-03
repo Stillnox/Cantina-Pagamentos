@@ -375,6 +375,8 @@ class CantinaFirebaseViewModel : ViewModel() {
      */
     fun carregarTransacoes(clienteId: String) {
         viewModelScope.launch {
+            _transacoesCliente.value = emptyList()
+
             when (val resultado = servicoDados.buscarTransacoes(clienteId)) {
                 is ResultadoFirebase.Sucesso -> {
                     _transacoesCliente.value = resultado.dados
@@ -383,7 +385,9 @@ class CantinaFirebaseViewModel : ViewModel() {
                     _mensagem.emit(resultado.mensagem)
                     _transacoesCliente.value = emptyList()
                 }
-                else -> {}
+                is ResultadoFirebase.Carregando -> {
+                    // Não faz nada - mantém lista vazia enquanto carrega
+                }
             }
         }
     }
