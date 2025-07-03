@@ -163,8 +163,6 @@ class ServicoAutenticacao {
      * Verifica se o funcionário atual é administrador
      */
     fun isAdmin(): Boolean {
-        println("🔥 [ServicoAutenticacao] funcionarioAtual: $funcionarioAtual")
-        println("🔥 [ServicoAutenticacao] funcionarioAtual?.isAdmin: ${funcionarioAtual?.isadmin}")
         return funcionarioAtual?.isadmin ?: false
     }
 
