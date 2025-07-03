@@ -20,16 +20,16 @@ object CoresPastel {
     val VerdeMenta = Color(0xFFB8E6D1)    // Verde menta suave
 
     // 2. Verde Sage Pastel - Cor secundária
-    val VerdeSage = Color(0xFFD4E4DC)     // Verde sage muito claro
+    val AzulSage = Color(0xFF2C3E50)     // Verde sage muito claro
 
     // 3. Pêssego Pastel - Contraste quente
-    val PessegoPastel = Color(0xFFFFE5CC)  // Pêssego suave para contrastes
+    val PessegoPastel = Color(0xFF5D6D7E)  // Pêssego suave para contrastes
 
     // 4. Amarelo Vanilla - Contraste suave
     val AmareloVanilla = Color(0xFFFFF4E6)  // Amarelo vanilla para destaques especiais
 
     // 5. Cinza Pérola - Neutro
-    val CinzaPerola = Color(0xFFF5F5F5)   // Cinza muito claro para backgrounds
+    val CinzaPerola = Color(0xFF1A1A1A)   // Cinza muito claro para backgrounds
 
     // 6. Azul Céu Pastel - Para informações
     val AzulCeuPastel = Color(0xFFD6EAF8)  // Azul céu suave
@@ -43,7 +43,7 @@ object CoresPastel {
  * Como usamos apenas cores pastéis (claras), o texto será sempre escuro
  */
 object CoresTexto {
-    val Principal = Color(0xFF2C3E50)      // Azul escuro para texto principal
+    val Principal = Color(0xFF000000)      // Azul escuro para texto principal
     val Secundario = Color(0xFF5D6D7E)     // Cinza azulado para texto secundário
     val Suave = Color(0xFF85929E)          // Cinza médio para texto menos importante
 }
@@ -60,7 +60,7 @@ private val PastelLightColorScheme = lightColorScheme(
     // Cores principais - Verde Menta
     primary = CoresPastel.VerdeMenta,
     onPrimary = CoresTexto.Principal,
-    primaryContainer = CoresPastel.VerdeSage,
+    primaryContainer = CoresPastel.AzulSage,
     onPrimaryContainer = CoresTexto.Principal,
 
     // Cores secundárias - Amarelo Vanilla
@@ -72,7 +72,7 @@ private val PastelLightColorScheme = lightColorScheme(
     // Cores terciárias - Pêssego
     tertiary = CoresPastel.PessegoPastel,
     onTertiary = CoresTexto.Principal,
-    tertiaryContainer = CoresPastel.VerdeSage,
+    tertiaryContainer = CoresPastel.AzulSage,
     onTertiaryContainer = CoresTexto.Principal,
 
     // Cores de erro - Coral
@@ -88,7 +88,7 @@ private val PastelLightColorScheme = lightColorScheme(
     // Cores de superfície
     surface = Color.White,
     onSurface = CoresTexto.Principal,
-    surfaceVariant = CoresPastel.VerdeSage,
+    surfaceVariant = CoresPastel.AzulSage,
     onSurfaceVariant = CoresTexto.Secundario,
 
     // Outras cores
@@ -98,7 +98,7 @@ private val PastelLightColorScheme = lightColorScheme(
 
     // Contornos
     outline = CoresTexto.Suave,
-    outlineVariant = CoresPastel.VerdeSage,
+    outlineVariant = CoresPastel.AzulSage,
 )
 
 // ===========================================================================================
@@ -142,7 +142,7 @@ private val PastelDarkColorScheme = darkColorScheme(
     surface = Color(0xFF2D2D2D),
     onSurface = CoresPastel.CinzaPerola,
     surfaceVariant = Color(0xFF3D3D3D),
-    onSurfaceVariant = CoresPastel.VerdeSage,
+    onSurfaceVariant = CoresPastel.AzulSage,
 
     // Outras cores
     inverseSurface = CoresPastel.CinzaPerola,
@@ -190,7 +190,7 @@ fun CantinaPastelTheme(
 object CoresSaldo {
     val Positivo = CoresPastel.VerdeMenta     // Verde para saldo positivo
     val Negativo = CoresPastel.CoralSuave      // Coral para saldo negativo
-    val Zerado = CoresPastel.VerdeSage        // Verde sage para saldo zero
+    val Zerado = CoresPastel.AzulSage        // Verde sage para saldo zero
 }
 
 /**
