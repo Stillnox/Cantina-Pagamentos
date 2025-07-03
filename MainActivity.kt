@@ -1,5 +1,6 @@
 package com.cantina.pagamentos
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -10,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -45,6 +47,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -65,7 +68,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
@@ -90,6 +92,11 @@ import com.cantina.pagamentos.AppConstants.MSG_DATA_INVALIDA
 import com.cantina.pagamentos.AppConstants.MSG_NOME_SOBRENOME
 import com.cantina.pagamentos.models.ClienteFirebase
 import com.cantina.pagamentos.models.EstadoAutenticacao
+import com.cantina.pagamentos.ui.theme.CantinaPastelTheme
+import com.cantina.pagamentos.ui.theme.CoresBadges
+import com.cantina.pagamentos.ui.theme.CoresPastel
+import com.cantina.pagamentos.ui.theme.CoresSaldo
+import com.cantina.pagamentos.ui.theme.CoresTexto
 import com.cantina.pagamentos.viewmodel.CantinaFirebaseViewModel
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.FirebaseApp
@@ -99,12 +106,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import com.cantina.pagamentos.ui.theme.CantinaPastelTheme
-import com.cantina.pagamentos.ui.theme.CoresSaldo
-import com.cantina.pagamentos.ui.theme.CoresBadges
-import com.cantina.pagamentos.ui.theme.CoresPastel
-import com.cantina.pagamentos.ui.theme.CoresTexto
-import com.cantina.pagamentos.ui.theme.getTextColor
 
 // ===========================================================================================
 // SEÇÃO 1: CONSTANTES E CONFIGURAÇÕES
@@ -154,6 +155,7 @@ fun validarData(data: String): Boolean {
     val mes = data.substring(2, 4).toIntOrNull() ?: return false
     val ano = data.substring(4, 8).toIntOrNull() ?: return false
 
+
     // Valida mês
     if (mes < 1 || mes > 12) return false
 
@@ -169,13 +171,13 @@ fun validarData(data: String): Boolean {
     if (dia < 1 || dia > diasNoMes) return false
 
     // Valida ano
-    val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
+    val anoAtual = Calendar.getInstance()[Calendar.YEAR]
     if (ano < 1900 || ano > anoAtual) return false
 
     // Verifica se a data não é futura
     if (ano == anoAtual) {
-        val mesAtual = Calendar.getInstance().get(Calendar.MONTH) + 1
-        val diaAtual = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+        val mesAtual = Calendar.getInstance()[Calendar.MONTH] + 1
+        val diaAtual = Calendar.getInstance()[Calendar.DAY_OF_MONTH]
 
         if (mes > mesAtual) return false
         if (mes == mesAtual && dia > diaAtual) return false
@@ -691,188 +693,333 @@ fun TelaLogin(
     viewModel: CantinaFirebaseViewModel,
     onLoginSucesso: () -> Unit,
 ) {
-    var email by remember { mutableStateOf("") }
-    var senha by remember { mutableStateOf("") }
-    var senhaVisivel by remember { mutableStateOf(false) }
+    val loginState = rememberLoginState()
     val context = LocalContext.current
     val estadoAuth by viewModel.estadoAutenticacao.collectAsState()
     val isCarregando by viewModel.isCarregando.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("Sistema Cantina - Login")
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CoresPastel.VerdeMenta,
-                    titleContentColor = CoresTexto.Principal,
-                    actionIconContentColor = CoresTexto.Principal
-                )
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Card principal com formulário de login
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Logo
-                    Text(
-                        text = "🍔",
-                        style = MaterialTheme.typography.displayLarge
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Faça login para continuar",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Campo Email
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it.trim() },
-                        label = { Text("Email") },
-                        placeholder = { Text("funcionario@cantina.com") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email
-                        ),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isCarregando,
-                        leadingIcon = {
-                            Text("📧", style = MaterialTheme.typography.titleLarge)
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Campo Senha
-                    OutlinedTextField(
-                        value = senha,
-                        onValueChange = { senha = it },
-                        label = { Text("Senha") },
-                        placeholder = { Text("Digite sua senha") },
-                        visualTransformation = if (senhaVisivel) {
-                            VisualTransformation.None
-                        } else {
-                            PasswordVisualTransformation()
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password
-                        ),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isCarregando,
-                        leadingIcon = {
-                            Text("🔒", style = MaterialTheme.typography.titleLarge)
-                        },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { senhaVisivel = !senhaVisivel }
-                            ) {
-                                Text(
-                                    if (senhaVisivel) "👁️" else "👁️‍🗨️",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Botão Login
-                    Button(
-                        onClick = {
-                            when {
-                                email.isEmpty() -> {
-                                    Toast.makeText(context, "Digite o email", Toast.LENGTH_SHORT).show()
-                                }
-                                senha.isEmpty() -> {
-                                    Toast.makeText(context, "Digite a senha", Toast.LENGTH_SHORT).show()
-                                }
-                                else -> {
-                                    viewModel.fazerLogin(email, senha)
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isCarregando && email.isNotEmpty() && senha.isNotEmpty()
-                    ) {
-                        if (isCarregando) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text(
-                                text = "Entrar",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Card de informações
-            Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = CoresPastel.PessegoPastel  // Pêssego para avisos
-                    )
-                ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "ℹ️ Informações de Acesso",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "• Use seu email corporativo\n" +
-                                "• A senha deve ter pelo menos 6 caracteres\n" +
-                                "• Em caso de problemas, contate o administrador",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+    // Observa mudanças no estado de autenticação
+    LaunchedEffect(estadoAuth) {
+        if (estadoAuth is EstadoAutenticacao.Autenticado) {
+            onLoginSucesso()
         }
     }
 
-    // Observa mudanças no estado de autenticação
-    LaunchedEffect(estadoAuth) {
-        when (estadoAuth) {
-            is EstadoAutenticacao.Autenticado -> {
-                onLoginSucesso()
+    Scaffold(
+        topBar = { LoginTopBar() }
+    ) { paddingValues ->
+        LoginContent(
+            paddingValues = paddingValues,
+            loginState = loginState,
+            isCarregando = isCarregando,
+            onLoginClick = { email, senha ->
+                handleLoginClick(context, email, senha, viewModel)
             }
-            else -> {}
+        )
+    }
+}
+
+/**
+ * Estado do formulário de login
+ */
+@Composable
+private fun rememberLoginState(): LoginState {
+    var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    var senhaVisivel by remember { mutableStateOf(false) }
+    
+    return LoginState(
+        email = email,
+        onEmailChange = { email = it.trim() },
+        senha = senha,
+        onSenhaChange = { senha = it },
+        senhaVisivel = senhaVisivel,
+        onSenhaVisivelChange = { senhaVisivel = it }
+    )
+}
+
+/**
+ * TopBar da tela de login
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LoginTopBar() {
+    TopAppBar(
+        title = { Text("Sistema Cantina - Login") },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = CoresPastel.VerdeMenta,
+            titleContentColor = CoresTexto.Principal,
+            actionIconContentColor = CoresTexto.Principal
+        )
+    )
+}
+
+/**
+ * Conteúdo principal da tela de login
+ */
+@Composable
+private fun LoginContent(
+    paddingValues: PaddingValues,
+    loginState: LoginState,
+    isCarregando: Boolean,
+    onLoginClick: (String, String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        LoginFormCard(
+            loginState = loginState,
+            isCarregando = isCarregando,
+            onLoginClick = onLoginClick
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        LoginInfoCard()
+    }
+}
+
+/**
+ * Card principal com formulário de login
+ */
+@Composable
+private fun LoginFormCard(
+    loginState: LoginState,
+    isCarregando: Boolean,
+    onLoginClick: (String, String) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LoginHeader()
+            Spacer(modifier = Modifier.height(24.dp))
+            LoginFormFields(
+                loginState = loginState,
+                isCarregando = isCarregando
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            LoginButton(
+                loginState = loginState,
+                isCarregando = isCarregando,
+                onLoginClick = onLoginClick
+            )
         }
     }
 }
+
+/**
+ * Cabeçalho do formulário de login
+ */
+@Composable
+private fun LoginHeader() {
+    Text(
+        text = "🍔",
+        style = MaterialTheme.typography.displayLarge
+    )
+    
+    Spacer(modifier = Modifier.height(8.dp))
+    
+    Text(
+        text = "Faça login para continuar",
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+/**
+ * Campos do formulário de login
+ */
+@Composable
+private fun LoginFormFields(
+    loginState: LoginState,
+    isCarregando: Boolean
+) {
+    LoginEmailField(
+        email = loginState.email,
+        onEmailChange = loginState.onEmailChange,
+        isCarregando = isCarregando
+    )
+    
+    Spacer(modifier = Modifier.height(16.dp))
+    
+    LoginPasswordField(
+        senha = loginState.senha,
+        onSenhaChange = loginState.onSenhaChange,
+        senhaVisivel = loginState.senhaVisivel,
+        onSenhaVisivelChange = loginState.onSenhaVisivelChange,
+        isCarregando = isCarregando
+    )
+}
+
+/**
+ * Campo de email
+ */
+@Composable
+private fun LoginEmailField(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    isCarregando: Boolean
+) {
+    OutlinedTextField(
+        value = email,
+        onValueChange = onEmailChange,
+        label = { Text("Email") },
+        placeholder = { Text("funcionario@cantina.com") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !isCarregando,
+        leadingIcon = {
+            Text("📧", style = MaterialTheme.typography.titleLarge)
+        }
+    )
+}
+
+/**
+ * Campo de senha
+ */
+@Composable
+private fun LoginPasswordField(
+    senha: String,
+    onSenhaChange: (String) -> Unit,
+    senhaVisivel: Boolean,
+    onSenhaVisivelChange: (Boolean) -> Unit,
+    isCarregando: Boolean
+) {
+    OutlinedTextField(
+        value = senha,
+        onValueChange = onSenhaChange,
+        label = { Text("Senha") },
+        placeholder = { Text("Digite sua senha") },
+        visualTransformation = if (senhaVisivel) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !isCarregando,
+        leadingIcon = {
+            Text("🔒", style = MaterialTheme.typography.titleLarge)
+        },
+        trailingIcon = {
+            IconButton(onClick = { onSenhaVisivelChange(!senhaVisivel) }) {
+                Text(
+                    if (senhaVisivel) "👁️" else "👁️‍🗨️",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+    )
+}
+
+/**
+ * Botão de login
+ */
+@Composable
+private fun LoginButton(
+    loginState: LoginState,
+    isCarregando: Boolean,
+    onLoginClick: (String, String) -> Unit
+) {
+    val isButtonEnabled = !isCarregando && loginState.email.isNotEmpty() && loginState.senha.isNotEmpty()
+    
+    Button(
+        onClick = { onLoginClick(loginState.email, loginState.senha) },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = isButtonEnabled
+    ) {
+        if (isCarregando) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        } else {
+            Text(
+                text = "Entrar",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+    }
+}
+
+/**
+ * Card de informações de acesso
+ */
+@Composable
+private fun LoginInfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = CoresPastel.PessegoPastel
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "ℹ️ Informações de Acesso",
+                style = MaterialTheme.typography.titleSmall
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "• Use seu email corporativo\n" +
+                        "• A senha deve ter pelo menos 6 caracteres\n" +
+                        "• Em caso de problemas, contate o administrador",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+/**
+ * Função para lidar com o clique no botão de login
+ */
+private fun handleLoginClick(
+    context: Context,
+    email: String,
+    senha: String,
+    viewModel: CantinaFirebaseViewModel
+) {
+    when {
+        email.isEmpty() -> {
+            Toast.makeText(context, "Digite o email", Toast.LENGTH_SHORT).show()
+        }
+        senha.isEmpty() -> {
+            Toast.makeText(context, "Digite a senha", Toast.LENGTH_SHORT).show()
+        }
+        else -> {
+            viewModel.fazerLogin(email, senha)
+        }
+    }
+}
+
+/**
+ * Classe para gerenciar o estado do formulário de login
+ */
+private data class LoginState(
+    val email: String,
+    val onEmailChange: (String) -> Unit,
+    val senha: String,
+    val onSenhaChange: (String) -> Unit,
+    val senhaVisivel: Boolean,
+    val onSenhaVisivelChange: (Boolean) -> Unit
+)
 
 // ===========================================================================================
 // SEÇÃO 7: TELA DE LISTA DE CLIENTES
@@ -892,6 +1039,8 @@ fun TelaListaClientesFirebase(
     var busca by remember { mutableStateOf("") }
     val clientes by viewModel.clientes.collectAsState()
     val isCarregando by viewModel.isCarregando.collectAsState()
+    val saldoVisivel by viewModel.saldoVisivel.collectAsState()
+    val isAdmin by viewModel.isAdmin.collectAsState()
     val context = LocalContext.current
 
     var forceUpdate by remember { mutableIntStateOf(0) }
@@ -942,8 +1091,21 @@ fun TelaListaClientesFirebase(
                         )
                     }
 
+                    // Botão de visualizar/ocultar saldo
+                    IconButton(
+                        onClick = {
+                            println("🔥 [UI - Lista] Botão clicado! Estado atual: $saldoVisivel")
+                            viewModel.alternarVisibilidadeSaldo()
+                        }
+                    ) {
+                        Text(
+                            if (saldoVisivel) "👁️" else "👁️‍🗨️",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                    }
+
                     // Botão exportar PDF - APENAS PARA ADMINS
-                    if (viewModel.isadmin()) {
+                    if (isAdmin) {
                         IconButton(onClick = {
                             val uri = viewModel.gerarPdfListaClientes(context, filtro)
                             if (uri != null) {
@@ -973,7 +1135,7 @@ fun TelaListaClientesFirebase(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFAEC3B0))
+                    .background(CoresPastel.CinzaPerola)
                     .padding(paddingValues)
                     .padding(6.dp)
             ) {
@@ -983,7 +1145,13 @@ fun TelaListaClientesFirebase(
                     onValueChange = { busca = it },
                     label = { Text("Buscar por nome") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CoresPastel.VerdeMenta,
+                        unfocusedBorderColor = CoresPastel.VerdeSage,
+                        focusedLabelColor = CoresTexto.Principal,
+                        unfocusedLabelColor = CoresTexto.Secundario
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -999,7 +1167,7 @@ fun TelaListaClientesFirebase(
                         color = CoresTexto.Secundario  // Cor de texto secundário
                     )
 
-                    if (viewModel.isadmin()) {
+                    if (isAdmin) {
                         Badge(
                             containerColor = CoresBadges.Admin  // Amarelo vanilla
                         ) {
@@ -1025,36 +1193,72 @@ fun TelaListaClientesFirebase(
                                 .padding(vertical = 4.dp),
                             onClick = { navController.navigate("cliente/${cliente.id}") },
                             colors = CardDefaults.cardColors(
-                                containerColor = when {
-                                    cliente.saldo > 0 -> CoresSaldo.Positivo     // Verde menta
-                                    cliente.saldo == 0.0 -> CoresSaldo.Zerado    // Verde sage
-                                    else -> CoresSaldo.Negativo                  // Rosa blush
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = BorderStroke(
+                                width = 2.dp,
+                                color = when {
+                                    cliente.saldo > 0 -> CoresPastel.VerdeMenta
+                                    cliente.saldo == 0.0 -> CoresPastel.VerdeSage
+                                    else -> CoresPastel.CoralSuave
                                 }
                             )
                         ) {
                             Column(
-                                modifier = Modifier.padding(6.dp)
+                                modifier = Modifier.padding(12.dp)
                             ) {
-                                Text(
-                                    text = cliente.nomeCompleto,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = cliente.nomeCompleto,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+
+                                    // Badge indicador do tipo de saldo
+                                    Badge(
+                                        containerColor = when {
+                                            cliente.saldo > 0 -> CoresPastel.VerdeMenta
+                                            cliente.saldo == 0.0 -> CoresPastel.VerdeSage
+                                            else -> CoresPastel.CoralSuave
+                                        }
+                                    ) {
+                                        Text(
+                                            text = when {
+                                                cliente.saldo > 0 -> "💰"
+                                                cliente.saldo == 0.0 -> "⚪"
+                                                else -> "⚠️"
+                                            },
+                                            color = CoresTexto.Principal,
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(
-                                        text = "Saldo: R$ %.2f".format(cliente.saldo),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = CoresTexto.Principal  // Sempre texto escuro em fundos pastéis
-                                    )
-
+                                    if (saldoVisivel) {
+                                        Text(
+                                            text = "Saldo: R$ %.2f".format(cliente.saldo),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = CoresTexto.Principal  // Sempre texto escuro em fundos pastéis
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Saldo: ****",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = CoresTexto.Principal  // Sempre texto escuro em fundos pastéis
+                                        )
+                                    }
 
                                     // Calcula quanto falta para o limite
                                     val faltaParaLimite = cliente.saldo - cliente.limiteNegativo
 
                                     // Aviso de proximidade do limite
-                                    if (cliente.saldo < 0 && faltaParaLimite <= 10.0 && faltaParaLimite > 0) {
+                                    if (saldoVisivel && cliente.saldo < 0 && faltaParaLimite <= 10.0 && faltaParaLimite > 0) {
                                         Text(
                                             text = "⚠️ Faltam R$ %.2f para o limite".format(faltaParaLimite),
                                             style = MaterialTheme.typography.labelSmall,
@@ -1448,6 +1652,8 @@ fun TelaClienteFirebase(
     val isCarregando by viewModel.isCarregando.collectAsState()
     val clientes by viewModel.clientes.collectAsState()
     val transacoes by viewModel.transacoesCliente.collectAsState()
+    val saldoVisivel by viewModel.saldoVisivel.collectAsState()
+    val isAdmin by viewModel.isAdmin.collectAsState()
 
     // Busca o cliente na lista
     LaunchedEffect(clienteId, clientes) {
@@ -1506,7 +1712,7 @@ fun TelaClienteFirebase(
                     }
 
                     // Botão adicionar crédito (só admin)
-                    if (viewModel.isadmin()) {
+                    if (isAdmin) {
                         Button(
                             onClick = { showAddCreditDialog = true },
                             enabled = !isCarregando,
@@ -1520,7 +1726,7 @@ fun TelaClienteFirebase(
                     }
 
                     // Botão configurações (só admin)
-                    if (viewModel.isadmin()) {
+                    if (isAdmin) {
                         IconButton(
                             onClick = { showLimiteDialog = true },
                             enabled = !isCarregando
@@ -1561,7 +1767,7 @@ fun TelaClienteFirebase(
                                 color = CoresTexto.Principal  // Sempre texto escuro
                             )
                             Text(
-                                text = "R$ %.2f".format(cliente!!.saldo),
+                                text = if (saldoVisivel) "R$ %.2f".format(cliente!!.saldo) else "R$ ****",
                                 style = MaterialTheme.typography.headlineLarge,
                                 color = CoresTexto.Principal  // Sempre texto escuro
                             )
@@ -1569,7 +1775,7 @@ fun TelaClienteFirebase(
                             Text("Data de Nascimento: ${cliente!!.dataNascimento}")
                             Text("Telefone: ${cliente!!.telefone}")
                             Text(
-                                text = "Limite: R$ %.2f".format(cliente!!.limiteNegativo),
+                                text = if (saldoVisivel) "Limite: R$ %.2f".format(cliente!!.limiteNegativo) else "Limite: ****",
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -1659,29 +1865,38 @@ fun TelaClienteFirebase(
                             // Indicação visual do saldo disponível
                             val saldoDisponivel = cliente!!.saldo - cliente!!.limiteNegativo
                             Column {
-                                if (saldoDisponivel > 0) {
+                                if (saldoVisivel) {
+                                    if (saldoDisponivel > 0) {
+                                        Text(
+                                            text = "Disponível para compras: R$ %.2f".format(saldoDisponivel),
+                                            color = MaterialTheme.colorScheme.primary,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "⚠️ Cliente atingiu o limite de crédito",
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    }
+
+                                    // Aviso de proximidade do limite
+                                    if (saldoDisponivel > 0 && saldoDisponivel <= 10.0) {
+                                        Text(
+                                            text = "⚠️ Atenção: Cliente próximo do limite",
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(top = 4.dp)
+                                        )
+                                    }
+                                } else {
                                     Text(
-                                        text = "Disponível para compras: R$ %.2f".format(saldoDisponivel),
+                                        text = "Disponível para compras: ****",
                                         color = MaterialTheme.colorScheme.primary,
                                         style = MaterialTheme.typography.bodySmall,
                                         modifier = Modifier.padding(top = 8.dp)
-                                    )
-                                } else {
-                                    Text(
-                                        text = "⚠️ Cliente atingiu o limite de crédito",
-                                        color = MaterialTheme.colorScheme.error,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        modifier = Modifier.padding(top = 8.dp)
-                                    )
-                                }
-
-                                // Aviso de proximidade do limite
-                                if (saldoDisponivel > 0 && saldoDisponivel <= 10.0) {
-                                    Text(
-                                        text = "⚠️ Atenção: Cliente próximo do limite",
-                                        color = MaterialTheme.colorScheme.error,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(top = 4.dp)
                                     )
                                 }
                             }
@@ -1703,7 +1918,7 @@ fun TelaClienteFirebase(
                             style = MaterialTheme.typography.titleLarge
                         )
 
-                        if (viewModel.isadmin()) {
+                        if (isAdmin) {
                             TextButton(
                                 onClick = { showRemoveDialog = true },
                                 colors = ButtonDefaults.textButtonColors(
@@ -1869,7 +2084,7 @@ fun TelaClienteFirebase(
     if (showLimiteExcedidoDialog) {
         DialogLimiteExcedido(
             mensagem = mensagemLimiteExcedido,
-            isAdmin = viewModel.isadmin(),
+            isAdmin = isAdmin,
             onDismiss = { showLimiteExcedidoDialog = false },
             onAdicionarCredito = {
                 showLimiteExcedidoDialog = false
@@ -2057,6 +2272,7 @@ fun TelaConfiguracoesFirebase(
 
     val isCarregando by viewModel.isCarregando.collectAsState()
     val estatisticas by viewModel.estatisticas.collectAsState()
+    val isAdmin by viewModel.isAdmin.collectAsState()
 
     val context = LocalContext.current
 
@@ -2096,7 +2312,7 @@ fun TelaConfiguracoesFirebase(
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             // Card de estatísticas
-            if (viewModel.isadmin()) {
+            if (isAdmin) {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
 
                 item {
@@ -2105,7 +2321,7 @@ fun TelaConfiguracoesFirebase(
             }
 
             // Seção de Administração (apenas para admins)
-            if (viewModel.isadmin()) {
+            if (isAdmin) {
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
@@ -2120,12 +2336,12 @@ fun TelaConfiguracoesFirebase(
                     OutlinedButton(
                         onClick = { showAddFuncionarioDialog = true },
                         modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = CoresTexto.Principal
-                                ),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = CoresTexto.Principal
+                        ),
                         border = BorderStroke(1.dp, CoresPastel.VerdeMenta)
                     )
-                     {
+                    {
                         Icon(
                             imageVector = Icons.Default.Place,
                             contentDescription = null,
@@ -2190,7 +2406,7 @@ fun TelaConfiguracoesFirebase(
             // Card de ajuda
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                CardAjuda(viewModel.isadmin())
+                CardAjuda(isAdmin)
             }
         }
     }
@@ -2244,6 +2460,7 @@ fun TelaConfiguracoesFirebase(
  */
 @Composable
 fun CardInformacoesUsuario(viewModel: CantinaFirebaseViewModel) {
+    val isAdmin by viewModel.isAdmin.collectAsState()
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -2271,13 +2488,13 @@ fun CardInformacoesUsuario(viewModel: CantinaFirebaseViewModel) {
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Badge(
-                    containerColor = if (viewModel.isadmin())
+                    containerColor = if (isAdmin)
                         CoresBadges.Admin        // Amarelo vanilla
                     else
                         CoresBadges.Funcionario  // Azul céu
                 ) {
                     Text(
-                        text = if (viewModel.isadmin()) "ADMINISTRADOR" else "FUNCIONÁRIO",
+                        text = if (isAdmin) "ADMINISTRADOR" else "FUNCIONÁRIO",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         color = CoresTexto.Principal  // Sempre texto escuro
                     )
