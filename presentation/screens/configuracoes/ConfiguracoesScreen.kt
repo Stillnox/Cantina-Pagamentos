@@ -1,4 +1,3 @@
-// presentation/screens/configuracoes/ConfiguracoesScreen.kt
 package com.cantina.pagamentos.presentation.screens.configuracoes
 
 import android.content.Context
@@ -227,15 +226,6 @@ private fun ConfigContent(
     }
 }
 
-// COPIAR TODAS AS OUTRAS FUNÇÕES RELACIONADAS:
-
-// - CardInformacoesUsuario
-// - CardEstatisticas
-// - CardSobre
-// - CardAjuda
-// - DialogAdicionarFuncionario
-// - ConfigState (data class)
-
 /**
  * Classe para gerenciar o estado das configurações
  */
@@ -407,28 +397,41 @@ private fun ConfigDialogs(
     // Dialog de confirmação de logout
     if (configState.showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { /* ação */ },
+            onDismissRequest = { configState.onShowLogoutDialogChange(false) },
             containerColor = CoresPastel.CinzaPerola,
             title = {
                 Text(
-                    "Título do Dialog",
+                    "Confirmar Logout",
                     color = CoresTexto.Principal
                 )
             },
             text = {
                 Text(
-                    "Conteúdo do dialog",
+                    "Tem certeza que deseja sair da sua conta?",
                     color = CoresTexto.Secundario
                 )
             },
             confirmButton = {
                 TextButton(
-                    onClick = { /* ação */ },
+                    onClick = {
+                        viewModel.fazerLogout()
+                        configState.onShowLogoutDialogChange(false)
+                    },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = CoresTexto.Principal
                     )
                 ) {
-                    Text("Confirmar")
+                    Text("Sair")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { configState.onShowLogoutDialogChange(false) },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = CoresTexto.Secundario
+                    )
+                ) {
+                    Text("Cancelar")
                 }
             }
         )
