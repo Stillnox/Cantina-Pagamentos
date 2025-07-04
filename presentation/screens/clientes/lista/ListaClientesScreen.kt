@@ -74,6 +74,7 @@ fun TelaListaClientesFirebase(
                 viewModel = viewModel,
                 filtro = filtro,
                 context = context,
+                navController = navController, // NOVO: passar navController
                 onAddCliente = { navController.navigate("cadastro") }
             )
         }
@@ -140,10 +141,10 @@ private fun ListaTopBar(
     filtro: String,
     context: Context,
     onAddCliente: () -> Unit,
+    navController: NavHostController, // NOVO: adicionar navController
 ) {
     val isCarregando by viewModel.isCarregando.collectAsState()
     val saldoVisivel by viewModel.saldoVisivel.collectAsState()
-    val isAdmin by viewModel.isAdmin.collectAsState()
 
     TopAppBar(
         title = {
@@ -166,10 +167,8 @@ private fun ListaTopBar(
             ListaTopBarActions(
                 isCarregando = isCarregando,
                 saldoVisivel = saldoVisivel,
-                isAdmin = isAdmin,
                 viewModel = viewModel,
-                filtro = filtro,
-                context = context,
+                navController = navController, // NOVO: passar navController
                 onAddCliente = onAddCliente
             )
         }
@@ -183,10 +182,8 @@ private fun ListaTopBar(
 private fun ListaTopBarActions(
     isCarregando: Boolean,
     saldoVisivel: Boolean,
-    isAdmin: Boolean,
     viewModel: CantinaFirebaseViewModel,
-    filtro: String,
-    context: Context,
+    navController: NavHostController, // NOVO: receber navController
     onAddCliente: () -> Unit,
 ) {
     if (isCarregando) {
@@ -211,21 +208,20 @@ private fun ListaTopBarActions(
         )
     }
 
-    // Botão exportar PDF - APENAS PARA ADMINS
-    if (isAdmin) {
-        IconButton(onClick = {
-            val uri = viewModel.gerarPdfListaClientes(context, filtro)
-            if (uri != null) {
-                viewModel.compartilharPdf(context, uri, "Relatório Cantina - $filtro")
-            }
-        }) {
-            Text("📄", style = MaterialTheme.typography.headlineMedium)
-        }
-    }
+    // REMOVIDO: Botão exportar PDF (foi movido para configurações)
 
     // Botão adicionar cliente
     IconButton(onClick = onAddCliente) {
         Text("➕", style = MaterialTheme.typography.headlineMedium)
+    }
+
+    // NOVO: Botão de configurações no canto superior direito
+    IconButton(
+        onClick = {
+            navController.navigate("configuracoes")
+        }
+    ) {
+        Text("⚙️", style = MaterialTheme.typography.headlineMedium)
     }
 }
 
