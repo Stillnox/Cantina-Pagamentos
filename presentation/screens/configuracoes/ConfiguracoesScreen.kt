@@ -125,6 +125,68 @@ private fun ConfigContent(
 
         // Card de estatísticas (apenas para admins)
         if (configState.isAdmin) {
+            item {
+                CardEstatisticas(configState.estatisticas)
+            }
+        }
+
+        // NOVA Seção de Exportação (para todos)
+        item {
+            ConfigExportSection(
+                onExportTodos = {
+                    val uri = viewModel.gerarPdfListaClientes(context, "todos")
+                    if (uri != null) {
+                        viewModel.compartilharPdf(context, uri, "Relatório - Todos os Clientes")
+                    }
+                },
+                onExportPositivo = {
+                    val uri = viewModel.gerarPdfListaClientes(context, "positivo")
+                    if (uri != null) {
+                        viewModel.compartilharPdf(context, uri, "Relatório - Saldo Positivo")
+                    }
+                },
+                onExportNegativo = {
+                    val uri = viewModel.gerarPdfListaClientes(context, "negativo")
+                    if (uri != null) {
+                        viewModel.compartilharPdf(context, uri, "Relatório - Saldo Negativo")
+                    }
+                },
+                onExportZerado = {
+                    val uri = viewModel.gerarPdfListaClientes(context, "zerado")
+                    if (uri != null) {
+                        viewModel.compartilharPdf(context, uri, "Relatório - Saldo Zerado")
+                    }
+                }
+            )
+        }
+
+        // Seção de Administração (apenas para admins)
+        if (configState.isAdmin) {
+            item {
+                ConfigAdminSection(
+                    onAddFuncionarioClick = { configState.onShowAddFuncionarioDialogChange(true) },
+                    onGerarRelatorioClick = {
+                        handleGerarRelatorioClick(viewModel, context)
+                    }
+                )
+            }
+        }
+
+        // Seção Conta
+        item {
+            ConfigContaSection(
+                onLogoutClick = { configState.onShowLogoutDialogChange(true) }
+            )
+        }
+        // Card de informações do usuário
+        item {
+            CardInformacoesUsuario(viewModel)
+        }
+
+        item { Spacer(modifier = Modifier.height(16.dp)) }
+
+        // Card de estatísticas (apenas para admins)
+        if (configState.isAdmin) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item {
                 CardEstatisticas(configState.estatisticas)
@@ -229,6 +291,87 @@ private fun ConfigAdminSection(
     }
 }
 
+/**
+ * NOVA Seção de exportação de PDFs por filtro
+ * Disponível para todos os funcionários
+ */
+@Composable
+private fun ConfigExportSection(
+    onExportTodos: () -> Unit,
+    onExportPositivo: () -> Unit,
+    onExportNegativo: () -> Unit,
+    onExportZerado: () -> Unit,
+) {
+    Spacer(modifier = Modifier.height(24.dp))
+    Text(
+        text = "📄 Exportar Relatórios",
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Gerar PDF por categoria:",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            // Botão Todos os Clientes
+            OutlinedButton(
+                onClick = onExportTodos,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Text("👥 Todos os Clientes")
+            }
+
+            // Botão Saldo Positivo
+            OutlinedButton(
+                onClick = onExportPositivo,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("💰 Clientes com Saldo Positivo")
+            }
+
+            // Botão Saldo Negativo
+            OutlinedButton(
+                onClick = onExportNegativo,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("💸 Clientes com Saldo Negativo")
+            }
+
+            // Botão Saldo Zerado
+            OutlinedButton(
+                onClick = onExportZerado,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Text("⚪ Clientes com Saldo Zerado")
+            }
+        }
+    }
+}
 
 /**
  * Seção de conta
