@@ -15,7 +15,8 @@ import com.cantina.pagamentos.presentation.theme.CoresTexto
 
 /**
  * Barra de navegação inferior do aplicativo
- * Mostra as 5 abas principais: Todos, Positivo, Negativo, Zerado e Configurações
+ * Mostra as 4 abas principais: Todos, Positivo, Negativo e Zerado
+ * Configurações foi movida para o topo da tela
  */
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
@@ -23,8 +24,8 @@ fun BottomNavigationBar(navController: NavHostController) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(
-        containerColor = CoresPastel.AzulSage,  // Fundo verde sage
-        contentColor = CoresTexto.Principal      // Ícones e texto escuros
+        containerColor = CoresPastel.AzulSage,
+        contentColor = CoresTexto.Principal
     ) {
         // Aba Todos - Lista todos os clientes
         NavigationBarItem(
@@ -39,7 +40,6 @@ fun BottomNavigationBar(navController: NavHostController) {
                 navController.navigate("todos") {
                     popUpTo("todos") { inclusive = true }
                 }
-
             }
         )
 
@@ -86,22 +86,6 @@ fun BottomNavigationBar(navController: NavHostController) {
             selected = currentRoute == "zerado",
             onClick = {
                 navController.navigate("zerado") {
-                    popUpTo("todos")
-                }
-            }
-        )
-
-        // Aba Configurações - Estatísticas e gerenciamento
-        NavigationBarItem(
-            icon = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("⚙️", style = MaterialTheme.typography.headlineMedium)
-                    Text("Config", style = MaterialTheme.typography.labelSmall)
-                }
-            },
-            selected = currentRoute == "configuracoes",
-            onClick = {
-                navController.navigate("configuracoes") {
                     popUpTo("todos")
                 }
             }
