@@ -41,7 +41,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.cantina.pagamentos.core.navigation.BottomNavigationBar
 import com.cantina.pagamentos.data.models.EstadoAutenticacao
 import com.cantina.pagamentos.presentation.screens.clientes.cadastro.TelaCadastroFirebase
 import com.cantina.pagamentos.presentation.screens.clientes.detalhes.TelaClienteFirebase
@@ -208,7 +207,6 @@ fun TelaCarregamento() {
 
 /**
  * Tela principal após login bem-sucedido
- * Contém a navegação e as telas do aplicativo
  */
 @Composable
 fun TelaPrincipal(
@@ -217,9 +215,7 @@ fun TelaPrincipal(
     snackbarHostState: SnackbarHostState,
 ) {
     Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController)
-        },
+        // Sem bottomBar
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         }
@@ -229,6 +225,11 @@ fun TelaPrincipal(
             startDestination = "todos",
             modifier = Modifier.padding(paddingValues)
         ) {
+            // Todas as rotas continuam iguais
+            composable("todos") {
+                TelaListaClientesFirebase(navController, viewModel, "todos")
+            }
+            // Rotas permanecem as mesmas
             composable("todos") {
                 TelaListaClientesFirebase(navController, viewModel, "todos")
             }
@@ -246,7 +247,10 @@ fun TelaPrincipal(
             }
 
             composable("configuracoes") {
-                ConfiguracoesScreen(viewModel)
+                ConfiguracoesScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
             }
 
             composable("cadastro") {
