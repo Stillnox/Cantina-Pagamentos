@@ -5,7 +5,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cantina.pagamentos.presentation.components.common.CampoMonetario
+import com.cantina.pagamentos.presentation.theme.CoresPastel
 
 /**
  * Dialog para adicionar crédito ao cliente
@@ -19,10 +21,24 @@ fun CreditoDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Adicionar Crédito") },
+        title = {
+            Text(
+                "Adicionar Crédito",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 22.sp
+                ),
+                color = CoresPastel.AzulCeuPastel
+            )
+        },
         text = {
             Column {
-                Text("Digite o valor a ser adicionado:")
+                Text(
+                    "Digite o valor a ser adicionado:",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 18.sp
+                    ),
+                    color = CoresPastel.VerdeMenta
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 CampoMonetario(
                     valor = valorCredito,
