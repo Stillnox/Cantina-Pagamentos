@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,9 +20,14 @@ import com.cantina.pagamentos.presentation.theme.CoresPastel
 import com.cantina.pagamentos.presentation.theme.CoresTexto
 import com.cantina.pagamentos.presentation.viewmodels.CantinaFirebaseViewModel
 
+/**
+ * Tela de configurações do sistema
+ * Mostra informações do usuário, estatísticas (para admins) e opções de gerenciamento
+ */
 @Composable
 fun ConfiguracoesScreen(
-    viewModel: CantinaFirebaseViewModel
+    viewModel: CantinaFirebaseViewModel,
+    onBackClick: () -> Unit = {}
 ) {
     val configState = rememberConfigState(viewModel)
     val context = LocalContext.current
@@ -34,7 +39,10 @@ fun ConfiguracoesScreen(
 
     Scaffold(
         topBar = {
-            ConfigTopBar(isCarregando = configState.isCarregando)
+            ConfigTopBar(
+                isCarregando = configState.isCarregando,
+                onBackClick = onBackClick
+            )
         }
     ) { paddingValues ->
         ConfigContent(
@@ -80,21 +88,32 @@ private fun rememberConfigState(viewModel: CantinaFirebaseViewModel): ConfigStat
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ConfigTopBar(isCarregando: Boolean) {
+private fun ConfigTopBar(
+    isCarregando: Boolean,
+    onBackClick: () -> Unit
+) {
     TopAppBar(
         title = { Text("Configurações") },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Text("←", style = MaterialTheme.typography.headlineMedium,
+                    color = CoresPastel.AzulCeuPastel)
+            }
+        },
         actions = {
             if (isCarregando) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .size(6.dp)
+                        .size(24.dp)
                         .padding(end = 8.dp),
                     strokeWidth = 2.dp,
                 )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = CoresPastel.AzulSage),
+            containerColor = CoresPastel.AzulSage,
+            titleContentColor = CoresPastel.AzulCeuPastel
+        ),
         windowInsets = WindowInsets(0, 0, 0, 0)
     )
 }
@@ -113,80 +132,16 @@ private fun ConfigContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Card de informações do usuário
         item {
             CardInformacoesUsuario(viewModel)
         }
 
-        item { Spacer(modifier = Modifier.height(16.dp)) }
-
         // Card de estatísticas (apenas para admins)
         if (configState.isAdmin) {
-            item {
-                CardEstatisticas(configState.estatisticas)
-            }
-        }
-
-        // NOVA Seção de Exportação (para todos)
-        item {
-            ConfigExportSection(
-                onExportTodos = {
-                    val uri = viewModel.gerarPdfListaClientes(context, "todos")
-                    if (uri != null) {
-                        viewModel.compartilharPdf(context, uri, "Relatório - Todos os Clientes")
-                    }
-                },
-                onExportPositivo = {
-                    val uri = viewModel.gerarPdfListaClientes(context, "positivo")
-                    if (uri != null) {
-                        viewModel.compartilharPdf(context, uri, "Relatório - Saldo Positivo")
-                    }
-                },
-                onExportNegativo = {
-                    val uri = viewModel.gerarPdfListaClientes(context, "negativo")
-                    if (uri != null) {
-                        viewModel.compartilharPdf(context, uri, "Relatório - Saldo Negativo")
-                    }
-                },
-                onExportZerado = {
-                    val uri = viewModel.gerarPdfListaClientes(context, "zerado")
-                    if (uri != null) {
-                        viewModel.compartilharPdf(context, uri, "Relatório - Saldo Zerado")
-                    }
-                }
-            )
-        }
-
-        // Seção de Administração (apenas para admins)
-        if (configState.isAdmin) {
-            item {
-                ConfigAdminSection(
-                    onAddFuncionarioClick = { configState.onShowAddFuncionarioDialogChange(true) },
-                    onGerarRelatorioClick = {
-                        handleGerarRelatorioClick(viewModel, context)
-                    }
-                )
-            }
-        }
-
-        // Seção Conta
-        item {
-            ConfigContaSection(
-                onLogoutClick = { configState.onShowLogoutDialogChange(true) }
-            )
-        }
-        // Card de informações do usuário
-        item {
-            CardInformacoesUsuario(viewModel)
-        }
-
-        item { Spacer(modifier = Modifier.height(16.dp)) }
-
-        // Card de estatísticas (apenas para admins)
-        if (configState.isAdmin) {
-            item { Spacer(modifier = Modifier.height(16.dp)) }
             item {
                 CardEstatisticas(configState.estatisticas)
             }
@@ -210,8 +165,6 @@ private fun ConfigContent(
                 onLogoutClick = { configState.onShowLogoutDialogChange(true) }
             )
         }
-
-        item { Spacer(modifier = Modifier.height(24.dp)) }
 
         // Card sobre
         item {
@@ -220,144 +173,66 @@ private fun ConfigContent(
 
         // Card de ajuda
         item {
-            Spacer(modifier = Modifier.height(16.dp))
             CardAjuda(configState.isAdmin)
         }
     }
 }
 
 /**
- * Classe para gerenciar o estado das configurações
- */
-private data class ConfigState(
-    val showLogoutDialog: Boolean,
-    val onShowLogoutDialogChange: (Boolean) -> Unit,
-    val showAddFuncionarioDialog: Boolean,
-    val onShowAddFuncionarioDialogChange: (Boolean) -> Unit,
-    val isCarregando: Boolean,
-    val estatisticas: Map<String, Any>,
-    val isAdmin: Boolean
-)
-
-
-/**
- * Seção de administração
+ * Seção de administração - SEM DUPLICAÇÃO
  */
 @Composable
 private fun ConfigAdminSection(
     onAddFuncionarioClick: () -> Unit,
     onGerarRelatorioClick: () -> Unit,
 ) {
-    Spacer(modifier = Modifier.height(24.dp))
-    Text(
-        text = "⚙️ Administração",
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-    OutlinedButton(
-        onClick = onAddFuncionarioClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = CoresTexto.Principal
-        ),
-        border = BorderStroke(1.dp, CoresPastel.VerdeMenta)
-    ) {
-        Icon(
-            imageVector = Icons.Default.Place,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Adicionar Funcionário")
-    }
-    Spacer(modifier = Modifier.height(8.dp))
-    OutlinedButton(
-        onClick = onGerarRelatorioClick,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text("📄", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Gerar Relatório Completo")
-    }
-}
-
-/**
- * NOVA Seção de exportação de PDFs por filtro
- * Disponível para todos os funcionários
- */
-@Composable
-private fun ConfigExportSection(
-    onExportTodos: () -> Unit,
-    onExportPositivo: () -> Unit,
-    onExportNegativo: () -> Unit,
-    onExportZerado: () -> Unit,
-) {
-    Spacer(modifier = Modifier.height(24.dp))
-    Text(
-        text = "📄 Exportar Relatórios",
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Gerar PDF por categoria:",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "⚙️ Administração",
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Botão Todos os Clientes
+            // Botão para adicionar funcionário
             OutlinedButton(
-                onClick = onExportTodos,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Text("👥 Todos os Clientes")
-            }
-
-            // Botão Saldo Positivo
-            OutlinedButton(
-                onClick = onExportPositivo,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                onClick = onAddFuncionarioClick,
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
+                    contentColor = CoresPastel.VerdeMenta
+                ),
+                border = BorderStroke(1.dp, CoresPastel.VerdeMenta)
             ) {
-                Text("💰 Clientes com Saldo Positivo")
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Adicionar Funcionário")
             }
 
-            // Botão Saldo Negativo
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Botão para gerar relatório
             OutlinedButton(
-                onClick = onExportNegativo,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                onClick = onGerarRelatorioClick,
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+                    contentColor = CoresPastel.VerdeMenta
+                ),
+                border = BorderStroke(1.dp, CoresPastel.VerdeMenta)
             ) {
-                Text("💸 Clientes com Saldo Negativo")
-            }
-
-            // Botão Saldo Zerado
-            OutlinedButton(
-                onClick = onExportZerado,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Text("⚪ Clientes com Saldo Zerado")
+                Text("📄", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Gerar Relatório Completo")
             }
         }
     }
@@ -368,21 +243,32 @@ private fun ConfigExportSection(
  */
 @Composable
 private fun ConfigContaSection(onLogoutClick: () -> Unit) {
-    Spacer(modifier = Modifier.height(24.dp))
-    Text(
-        text = "🔐 Conta",
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-    Button(
-        onClick = onLogoutClick,
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = CoresPastel.VerdeMenta,
-            contentColor = CoresTexto.Principal
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
     ) {
-        Text("Sair da Conta")
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "🔐 Conta",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            Button(
+                onClick = onLogoutClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = CoresPastel.VerdeMenta,
+                    contentColor = CoresTexto.Principal
+                )
+            ) {
+                Text("Sair da Conta")
+            }
+        }
     }
 }
 
@@ -418,7 +304,7 @@ private fun ConfigDialogs(
                         configState.onShowLogoutDialogChange(false)
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = CoresTexto.Principal
+                        contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
                     Text("Sair")
@@ -428,7 +314,7 @@ private fun ConfigDialogs(
                 TextButton(
                     onClick = { configState.onShowLogoutDialogChange(false) },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = CoresTexto.Secundario
+                        contentColor = CoresTexto.Principal
                     )
                 ) {
                     Text("Cancelar")
@@ -463,8 +349,9 @@ private fun handleGerarRelatorioClick(viewModel: CantinaFirebaseViewModel, conte
  * Card que exibe informações do usuário atual
  */
 @Composable
-fun CardInformacoesUsuario(viewModel: CantinaFirebaseViewModel) {
+private fun CardInformacoesUsuario(viewModel: CantinaFirebaseViewModel) {
     val isAdmin by viewModel.isAdmin.collectAsState()
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -479,10 +366,13 @@ fun CardInformacoesUsuario(viewModel: CantinaFirebaseViewModel) {
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = "Nome: ${viewModel.getNomeFuncionario()}",
                 style = MaterialTheme.typography.bodyLarge
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -512,7 +402,7 @@ fun CardInformacoesUsuario(viewModel: CantinaFirebaseViewModel) {
  * Card que exibe estatísticas do sistema
  */
 @Composable
-fun CardEstatisticas(estatisticas: Map<String, Any>) {
+private fun CardEstatisticas(estatisticas: Map<String, Any>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -526,7 +416,7 @@ fun CardEstatisticas(estatisticas: Map<String, Any>) {
                 text = "📊 Estatísticas do Sistema",
                 style = MaterialTheme.typography.titleLarge
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             val totalClientes = estatisticas["totalClientes"] as? Int ?: 0
             val clientesPositivos = estatisticas["clientesPositivos"] as? Int ?: 0
@@ -534,13 +424,12 @@ fun CardEstatisticas(estatisticas: Map<String, Any>) {
             val clientesZerados = estatisticas["clientesZerados"] as? Int ?: 0
             val saldoTotal = estatisticas["saldoTotal"] as? Double ?: 0.0
 
-            Text("Total de Clientes: $totalClientes")
-            Text("Clientes com saldo positivo: $clientesPositivos")
-            Text("Clientes com saldo negativo: $clientesNegativos")
-            Text("Clientes com saldo zerado: $clientesZerados")
+            Text("Total de Clientes: $totalClientes", style = MaterialTheme.typography.bodyMedium)
+            Text("• Com saldo positivo: $clientesPositivos", style = MaterialTheme.typography.bodyMedium)
+            Text("• Com saldo negativo: $clientesNegativos", style = MaterialTheme.typography.bodyMedium)
+            Text("• Com saldo zerado: $clientesZerados", style = MaterialTheme.typography.bodyMedium)
 
-            // LINHA CORRIGIDA: Usar HorizontalDivider ao invés de Divider
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
             Text(
                 text = "Saldo Total: R$ %.2f".format(saldoTotal),
@@ -559,30 +448,7 @@ fun CardEstatisticas(estatisticas: Map<String, Any>) {
  * Card com informações sobre o app
  */
 @Composable
-fun CardSobre() {
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "ℹ️ Sobre",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Versão: 2.0 (Firebase)")
-            Text("Sistema de gerenciamento de cantina")
-            Text("Desenvolvido com Kotlin + Jetpack Compose + Firebase")
-        }
-    }
-}
-
-/**
- * Card com dicas de uso baseado no tipo de usuário
- */
-@Composable
-fun CardAjuda(isAdmin: Boolean) {
+private fun CardSobre() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -593,8 +459,35 @@ fun CardAjuda(isAdmin: Boolean) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
+                text = "ℹ️ Sobre",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Versão: 2.0 (Firebase)", style = MaterialTheme.typography.bodyMedium)
+            Text("Sistema de gerenciamento de cantina", style = MaterialTheme.typography.bodyMedium)
+            Text("Desenvolvido com Kotlin + Jetpack Compose + Firebase", style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+/**
+ * Card com dicas de uso baseado no tipo de usuário
+ */
+@Composable
+private fun CardAjuda(isAdmin: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
                 text = "💡 Dicas de Uso",
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleMedium,
+                color = CoresPastel.AzulCeuPastel
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -606,7 +499,8 @@ fun CardAjuda(isAdmin: Boolean) {
                             "• Remover clientes\n" +
                             "• Adicionar novos funcionários\n" +
                             "• Gerar relatórios completos",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = CoresPastel.AzulCeuPastel
                 )
             } else {
                 Text(
@@ -615,7 +509,8 @@ fun CardAjuda(isAdmin: Boolean) {
                             "• Realizar vendas (débitos)\n" +
                             "• Visualizar saldos e históricos\n" +
                             "• Buscar clientes por nome",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = CoresTexto.Principal
                 )
             }
         }
@@ -626,7 +521,7 @@ fun CardAjuda(isAdmin: Boolean) {
  * Dialog para adicionar novo funcionário
  */
 @Composable
-fun DialogAdicionarFuncionario(
+private fun DialogAdicionarFuncionario(
     onDismiss: () -> Unit,
     onConfirm: (email: String, senha: String, nome: String, isAdmin: Boolean) -> Unit,
 ) {
@@ -728,3 +623,16 @@ fun DialogAdicionarFuncionario(
         }
     )
 }
+
+/**
+ * Classe para gerenciar o estado das configurações
+ */
+private data class ConfigState(
+    val showLogoutDialog: Boolean,
+    val onShowLogoutDialogChange: (Boolean) -> Unit,
+    val showAddFuncionarioDialog: Boolean,
+    val onShowAddFuncionarioDialogChange: (Boolean) -> Unit,
+    val isCarregando: Boolean,
+    val estatisticas: Map<String, Any>,
+    val isAdmin: Boolean
+)
