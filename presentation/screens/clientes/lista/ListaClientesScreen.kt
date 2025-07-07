@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.cantina.pagamentos.data.models.ClienteFirebase
 import com.cantina.pagamentos.presentation.components.cards.ClienteCard
 import com.cantina.pagamentos.presentation.theme.CoresBadges
@@ -61,8 +62,9 @@ fun TelaListaClientesFirebase(
     navController: NavHostController,
     viewModel: CantinaFirebaseViewModel,
     filtro: String,
+    onClienteClick: ((String) -> Unit)? = null,
 ) {
-    val listaState = rememberListaState(viewModel, filtro)
+    val listaState = rememberListaState(viewModel, filtro, onClienteClick)
 
     Scaffold(
         topBar = {
@@ -94,6 +96,97 @@ fun TelaListaClientesFirebase(
             navController = navController
         )
     }
+}
+
+/**
+ * Versão simplificada para Dual Pane - sem navegação própria
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TelaListaClientesFirebaseDual(
+    viewModel: CantinaFirebaseViewModel,
+    filtro: String,
+    onClienteClick: (String) -> Unit,
+) {
+    val listaState = rememberListaState(viewModel, filtro, onClienteClick)
+
+    Scaffold(
+        topBar = {
+            ListaTopBarSimples(
+                filtro = filtro,
+                viewModel = viewModel
+            )
+        }
+    ) { paddingValues ->
+        ListaContent(
+            paddingValues = paddingValues,
+            listaState = listaState,
+            navController = rememberNavController() // dummy nav controller
+        )
+    }
+}
+
+/**
+ * TopBar simplificada para Dual Pane
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ListaTopBarSimples(
+    filtro: String,
+    viewModel: CantinaFirebaseViewModel,
+) {
+    val saldoVisivel by viewModel.saldoVisivel.collectAsState()
+    val isCarregando by viewModel.isCarregando.collectAsState()
+
+    // Define o título e emoji baseado no filtro
+    val (titulo, emoji) = when (filtro) {
+        "todos" -> "Todos os Clientes" to "👥"
+        "positivo" -> "Saldo Positivo" to "💰"
+        "negativo" -> "Saldo Negativo" to "💸"
+        "zerado" -> "Saldo Zerado" to "⚪"
+        else -> "Clientes" to "👥"
+    }
+
+    TopAppBar(
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(emoji)
+                Text(
+                    text = titulo,
+                    color = CoresTexto.Suave
+                )
+            }
+        },
+        actions = {
+            // Loading indicator
+            if (isCarregando) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(end = 8.dp),
+                    strokeWidth = 2.dp
+                )
+            }
+
+            // Botão de visualizar/ocultar saldo
+            IconButton(
+                onClick = { viewModel.alternarVisibilidadeSaldo() }
+            ) {
+                Text(
+                    if (saldoVisivel) "👁️" else "👁️‍🗨️",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = CoresPastel.AzulSage,
+            titleContentColor = CoresPastel.CinzaPerola,
+            actionIconContentColor = CoresPastel.CinzaPerola
+        )
+    )
 }
 
 
@@ -308,6 +401,7 @@ private fun ListaTopBar(
 private fun rememberListaState(
     viewModel: CantinaFirebaseViewModel,
     filtro: String,
+    onClienteClick: ((String) -> Unit)? = null,
 ): ListaState {
     var busca by remember { mutableStateOf("") }
     val clientes by viewModel.clientes.collectAsState()
@@ -340,7 +434,8 @@ private fun rememberListaState(
         isCarregando = isCarregando,
         saldoVisivel = saldoVisivel,
         isAdmin = isAdmin,
-        titulo = titulo
+        titulo = titulo,
+        onClienteClick = onClienteClick
     )
 }
 
@@ -377,7 +472,8 @@ private fun ListaContent(
             ListaClientes(
                 clientes = listaState.clientesFiltrados,
                 saldoVisivel = listaState.saldoVisivel,
-                navController = navController
+                navController = navController,
+                onClienteClick = listaState.onClienteClick
             )
         }
     }
@@ -419,7 +515,8 @@ private fun ListaMainContent(
         ListaClientes(
             clientes = listaState.clientesFiltrados,
             saldoVisivel = listaState.saldoVisivel,
-            navController = navController
+            navController = navController,
+            onClienteClick = listaState.onClienteClick
         )
     }
 }
@@ -433,7 +530,8 @@ private fun ListaSearchField(listaState: ListaState) {
         onValueChange = listaState.onBuscaChange,
         label = { Text("Buscar por nome") },  // Voltando para label
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(44.dp),  // Altura ligeiramente maior para não cortar
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             // Borda
@@ -483,10 +581,6 @@ private fun ListaHeader(listaState: ListaState) {
     }
 }
 
-// presentation/screens/clientes/lista/ListaClientesScreen.kt
-
-// ... outras funções ...
-
 /**
  * Lista de clientes
  */
@@ -494,7 +588,8 @@ private fun ListaHeader(listaState: ListaState) {
 private fun ListaClientes(
     clientes: List<ClienteFirebase>,
     saldoVisivel: Boolean,
-    navController: NavHostController
+    navController: NavHostController,
+    onClienteClick: ((String) -> Unit)? = null,
 ) {
     LazyColumn {
         items(
@@ -504,7 +599,13 @@ private fun ListaClientes(
             ClienteCard(
                 cliente = cliente,
                 saldoVisivel = saldoVisivel,
-                onClick = { navController.navigate("cliente/${cliente.id}") }
+                onClick = {
+                    if (onClienteClick != null) {
+                        onClienteClick(cliente.id)
+                    } else {
+                        navController.navigate("cliente/${cliente.id}")
+                    }
+                }
             )
         }
     }
@@ -522,4 +623,5 @@ private data class ListaState(
     val saldoVisivel: Boolean,
     val isAdmin: Boolean,
     val titulo: String,
+    val onClienteClick: ((String) -> Unit)? = null,
 )
