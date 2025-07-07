@@ -27,7 +27,7 @@ import com.cantina.pagamentos.presentation.theme.CoresTexto
 fun ClienteCard(
     cliente: ClienteFirebase,
     saldoVisivel: Boolean,
-    onClick: () -> Unit,
+    onClick: () -> Unit = {}, // adicione valor padrão
 ) {
     Card(
         modifier = Modifier
