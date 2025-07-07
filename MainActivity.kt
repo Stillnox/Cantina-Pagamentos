@@ -1,12 +1,15 @@
 package com.cantina.pagamentos
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -25,13 +28,18 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,7 +52,9 @@ import androidx.navigation.compose.rememberNavController
 import com.cantina.pagamentos.data.models.EstadoAutenticacao
 import com.cantina.pagamentos.presentation.screens.clientes.cadastro.TelaCadastroFirebase
 import com.cantina.pagamentos.presentation.screens.clientes.detalhes.TelaClienteFirebase
+import com.cantina.pagamentos.presentation.screens.clientes.detalhes.TelaClienteFirebaseDual
 import com.cantina.pagamentos.presentation.screens.clientes.lista.TelaListaClientesFirebase
+import com.cantina.pagamentos.presentation.screens.clientes.lista.TelaListaClientesFirebaseDual
 import com.cantina.pagamentos.presentation.screens.configuracoes.ConfiguracoesScreen
 import com.cantina.pagamentos.presentation.screens.login.TelaLogin
 import com.cantina.pagamentos.presentation.theme.CantinaPastelTheme
@@ -181,7 +191,14 @@ fun AppCantinaFirebase() {
             )
         }
         is EstadoAutenticacao.Autenticado -> {
-            TelaPrincipal(navController, viewModel, snackbarHostState)
+            val configuration = LocalConfiguration.current
+            val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+            if (isLandscape) {
+                TelaPrincipalDual(viewModel, snackbarHostState)
+            } else {
+                TelaPrincipal(navController, viewModel, snackbarHostState)
+            }
         }
     }
 }
@@ -229,10 +246,6 @@ fun TelaPrincipal(
             composable("todos") {
                 TelaListaClientesFirebase(navController, viewModel, "todos")
             }
-            // Rotas permanecem as mesmas
-            composable("todos") {
-                TelaListaClientesFirebase(navController, viewModel, "todos")
-            }
 
             composable("positivo") {
                 TelaListaClientesFirebase(navController, viewModel, "positivo")
@@ -260,6 +273,59 @@ fun TelaPrincipal(
             composable("cliente/{clienteId}") { backStackEntry ->
                 val clienteId = backStackEntry.arguments?.getString("clienteId") ?: ""
                 TelaClienteFirebase(navController, viewModel, clienteId)
+            }
+        }
+    }
+}
+
+/**
+ * Tela principal para modo paisagem (dual pane)
+ * Mostra lista à esquerda e detalhes à direita
+ */
+@Composable
+fun TelaPrincipalDual(
+    viewModel: CantinaFirebaseViewModel,
+    snackbarHostState: SnackbarHostState,
+) {
+    var clienteSelecionado by remember { mutableStateOf<String?>(null) }
+
+    Row(modifier = Modifier.fillMaxSize()) {
+        // Lista à esquerda (50% da tela)
+        Box(modifier = Modifier.weight(1f)) {
+            TelaListaClientesFirebaseDual(
+                viewModel = viewModel,
+                filtro = "todos",
+                onClienteClick = { clienteId ->
+                    clienteSelecionado = clienteId
+                }
+            )
+        }
+
+        // Divider vertical
+        VerticalDivider()
+
+        // Detalhes à direita (50% da tela)
+        Box(modifier = Modifier.weight(1f)) {
+            if (clienteSelecionado != null) {
+                TelaClienteFirebaseDual(
+                    viewModel = viewModel,
+                    clienteId = clienteSelecionado!!,
+                    onClose = { clienteSelecionado = null }
+                )
+            } else {
+                // Tela preta quando nenhum cliente selecionado
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Selecione um cliente",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
             }
         }
     }
