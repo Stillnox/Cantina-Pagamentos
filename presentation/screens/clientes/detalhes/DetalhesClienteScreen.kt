@@ -66,6 +66,7 @@ fun TelaClienteFirebase(
     navController: NavHostController,
     viewModel: CantinaFirebaseViewModel,
     clienteId: String,
+    isDualPane: Boolean = false,
 ) {
     val clienteState = rememberClienteState(viewModel)
     val context = LocalContext.current
@@ -84,7 +85,7 @@ fun TelaClienteFirebase(
     if (clienteState.cliente == null && !clienteState.isCarregando) {
         LaunchedEffect(clienteId) {
             delay(300)
-            navController.popBackStack()
+            if (!isDualPane) navController.popBackStack()
         }
         return
     }
@@ -95,7 +96,9 @@ fun TelaClienteFirebase(
                 cliente = clienteState.cliente,
                 isCarregando = clienteState.isCarregando,
                 isAdmin = clienteState.isAdmin,
-                onBackClick = { navController.popBackStack() },
+                onBackClick = {
+                    if (!isDualPane) navController.popBackStack()
+                },
                 onExportClick = {
                     val uri = viewModel.gerarPdfExtratoCliente(context, clienteId)
                     if (uri != null) {
@@ -198,7 +201,146 @@ fun TelaClienteFirebase(
         clienteState = clienteState,
         viewModel = viewModel,
         clienteId = clienteId,
-        navController = navController
+        navController = navController,
+        isDualPane = isDualPane
+    )
+}
+
+/**
+ * Versão simplificada para Dual Pane - sem navegação
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TelaClienteFirebaseDual(
+    viewModel: CantinaFirebaseViewModel,
+    clienteId: String,
+    onClose: () -> Unit,
+) {
+    val clienteState = rememberClienteState(viewModel)
+    val context = LocalContext.current
+
+    // Carrega o cliente e transações
+    LaunchedEffect(clienteId, clienteState.clientes) {
+        val clienteEncontrado = clienteState.clientes.find { it.id == clienteId }
+        clienteState.onClienteChange(clienteEncontrado)
+
+        if (clienteEncontrado != null) {
+            viewModel.carregarTransacoes(clienteId)
+        }
+    }
+
+    // Se não encontrou o cliente, limpa a seleção
+    if (clienteState.cliente == null && !clienteState.isCarregando) {
+        LaunchedEffect(clienteId) {
+            delay(300)
+            onClose()
+        }
+        return
+    }
+
+    Scaffold(
+        topBar = {
+            ClienteTopBarDual(
+                cliente = clienteState.cliente,
+                isCarregando = clienteState.isCarregando,
+                isAdmin = clienteState.isAdmin,
+                onExportClick = {
+                    val uri = viewModel.gerarPdfExtratoCliente(context, clienteId)
+                    if (uri != null) {
+                        viewModel.compartilharPdf(context, uri, "Extrato - ${clienteState.cliente?.nomeCompleto}")
+                    }
+                },
+                onAddCreditClick = { clienteState.onShowAddCreditDialogChange(true) },
+                onConfigClick = { clienteState.onShowLimiteDialogChange(true) }
+            )
+        }
+    ) { paddingValues ->
+        if (clienteState.cliente != null) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Saldo do cliente
+                item {
+                    ClienteSaldoCard(
+                        cliente = clienteState.cliente,
+                        saldoVisivel = clienteState.saldoVisivel
+                    )
+                }
+
+                // Área de compra
+                stickyHeader {
+                    ClienteCompraCard(
+                        cliente = clienteState.cliente,
+                        valorOperacao = clienteState.valorOperacao,
+                        onValorOperacaoChange = clienteState.onValorOperacaoChange,
+                        saldoVisivel = clienteState.saldoVisivel,
+                        isCarregando = clienteState.isCarregando,
+                        onConfirmCompra = { valor ->
+                            handleCompra(
+                                clienteState = clienteState,
+                                viewModel = viewModel,
+                                clienteId = clienteId,
+                                valor = valor
+                            )
+                        }
+                    )
+                }
+
+                // Cabeçalho do extrato
+                item {
+                    ClienteExtratoHeader(
+                        isAdmin = clienteState.isAdmin,
+                        onRemoveClick = { clienteState.onShowRemoveDialogChange(true) }
+                    )
+                }
+
+                // Lista de transações
+                if (clienteState.transacoes.isEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("📝", style = MaterialTheme.typography.headlineMedium)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Nenhuma transação realizada ainda",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(
+                        items = clienteState.transacoes,
+                        key = { transacao -> transacao.id }
+                    ) { transacao ->
+                        ClienteTransacaoItem(transacao = transacao)
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
+            }
+        }
+    }
+
+    // Dialogs com onClose ao invés de navController
+    ClienteDialogsDual(
+        clienteState = clienteState,
+        viewModel = viewModel,
+        clienteId = clienteId,
+        onClose = onClose
     )
 }
 
@@ -331,6 +473,57 @@ private fun ClienteTopBar(
             containerColor = CoresPastel.AzulSage,
         ),
         windowInsets = WindowInsets(0, 0, 0, 0)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ClienteTopBarDual(
+    cliente: ClienteFirebase?,
+    isCarregando: Boolean,
+    isAdmin: Boolean,
+    onExportClick: () -> Unit,
+    onAddCreditClick: () -> Unit,
+    onConfigClick: () -> Unit,
+) {
+    TopAppBar(
+        title = {
+            Text(
+                cliente?.nomeCompleto ?: "Carregando...",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        },
+        actions = {
+            if (isCarregando) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(end = 8.dp),
+                    strokeWidth = 2.dp
+                )
+            }
+            IconButton(onClick = onExportClick, enabled = !isCarregando && cliente != null) {
+                Text("📄", style = MaterialTheme.typography.headlineSmall)
+            }
+            if (isAdmin) {
+                Button(
+                    onClick = onAddCreditClick,
+                    enabled = !isCarregando,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = CoresPastel.VerdeMenta,
+                        contentColor = CoresTexto.Principal
+                    )
+                ) {
+                    Text("+ Crédito")
+                }
+                IconButton(
+                    onClick = onConfigClick,
+                    enabled = !isCarregando
+                ) {
+                    Text("⚙", style = MaterialTheme.typography.headlineMedium)
+                }
+            }
+        }
     )
 }
 
@@ -572,6 +765,7 @@ private fun ClienteDialogs(
     viewModel: CantinaFirebaseViewModel,
     clienteId: String,
     navController: NavHostController,
+    isDualPane: Boolean = false,
 ) {
     // Dialog para adicionar crédito (ADMIN)
     if (clienteState.showAddCreditDialog) {
@@ -606,7 +800,7 @@ private fun ClienteDialogs(
                     onClick = {
                         viewModel.removerCliente(clienteId)
                         clienteState.onShowRemoveDialogChange(false)
-                        navController.popBackStack()
+                        if (!isDualPane) navController.popBackStack()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = CoresPastel.CoralSuave,
@@ -649,6 +843,104 @@ private fun ClienteDialogs(
             }
         )
     }
+    // Dialog de erro - Limite excedido
+    if (clienteState.showLimiteExcedidoDialog) {
+        DialogLimiteExcedido(
+            mensagem = clienteState.mensagemLimiteExcedido,
+            isAdmin = clienteState.isAdmin,
+            onDismiss = { clienteState.onShowLimiteExcedidoDialogChange(false) },
+            onAdicionarCredito = {
+                clienteState.onShowLimiteExcedidoDialogChange(false)
+                clienteState.onShowAddCreditDialogChange(true)
+            }
+        )
+    }
+}
+
+@Composable
+private fun ClienteDialogsDual(
+    clienteState: ClienteState,
+    viewModel: CantinaFirebaseViewModel,
+    clienteId: String,
+    onClose: () -> Unit,
+) {
+    // Dialog para adicionar crédito (ADMIN)
+    if (clienteState.showAddCreditDialog) {
+        CreditoDialog(
+            onDismiss = { clienteState.onShowAddCreditDialogChange(false) },
+            onConfirm = { valor ->
+                viewModel.adicionarCredito(clienteId, valor)
+                clienteState.onShowAddCreditDialogChange(false)
+                clienteState.onShowCreditoDialogChange(true)
+            }
+        )
+    }
+
+    // Dialog para alterar limite (ADMIN)
+    if (clienteState.showLimiteDialog) {
+        DialogAlterarLimite(
+            limiteAtual = clienteState.cliente?.limiteNegativo ?: -50.0,
+            onDismiss = { clienteState.onShowLimiteDialogChange(false) },
+            onConfirm = { novoLimite ->
+                viewModel.atualizarLimiteNegativo(clienteId, novoLimite)
+                clienteState.onShowLimiteDialogChange(false)
+            }
+        )
+    }
+
+    // Dialog para remover cliente (ADMIN)
+    if (clienteState.showRemoveDialog) {
+        AlertDialog(
+            onDismissRequest = { clienteState.onShowRemoveDialogChange(false) },
+            title = { Text("Confirmar Exclusão") },
+            text = { Text(Const.MSG_CONFIRMAR_EXCLUSAO) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.removerCliente(clienteId)
+                        clienteState.onShowRemoveDialogChange(false)
+                        onClose() // ao invés de navController.popBackStack()
+                    }
+                ) {
+                    Text("Remover")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { clienteState.onShowRemoveDialogChange(false) }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // Dialog de sucesso - Crédito
+    if (clienteState.showCreditoDialog) {
+        AlertDialog(
+            onDismissRequest = { clienteState.onShowCreditoDialogChange(false) },
+            title = { Text(Const.MSG_SUCESSO) },
+            text = { Text(Const.MSG_CREDITO_ADICIONADO) },
+            confirmButton = {
+                TextButton(onClick = { clienteState.onShowCreditoDialogChange(false) }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Dialog de sucesso - Débito
+    if (clienteState.showDebitoDialog) {
+        AlertDialog(
+            onDismissRequest = { clienteState.onShowDebitoDialogChange(false) },
+            title = { Text(Const.MSG_SUCESSO) },
+            text = { Text(Const.MSG_COMPRA_REALIZADA) },
+            confirmButton = {
+                TextButton(onClick = { clienteState.onShowDebitoDialogChange(false) }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
     // Dialog de erro - Limite excedido
     if (clienteState.showLimiteExcedidoDialog) {
         DialogLimiteExcedido(
