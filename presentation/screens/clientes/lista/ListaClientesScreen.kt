@@ -159,7 +159,7 @@ private fun ListaTopBar(
                     onDismissRequest = { dropdownExpanded = false },
                     modifier = Modifier.background(MaterialTheme.colorScheme.surface),
 
-                ) {
+                    ) {
                     // Opção: Todos
                     DropdownMenuItem(
                         text = {
@@ -433,8 +433,7 @@ private fun ListaSearchField(listaState: ListaState) {
         onValueChange = listaState.onBuscaChange,
         label = { Text("Buscar por nome") },  // Voltando para label
         modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp),  // Altura ligeiramente maior para não cortar
+            .fillMaxWidth(),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             // Borda
