@@ -19,6 +19,8 @@ object CoresPastel {
     // 1. Verde Menta Pastel - Cor principal
     val VerdeMenta = Color(0xFFB8E6D1)    // Verde menta suave
 
+    val VerdeMentaClaro = Color(0xFFD4F1E4)
+
     // 2. Verde Sage Pastel - Cor secundária
     val AzulSage = Color(0xFF2C3E50)     // Verde sage muito claro
 
@@ -190,7 +192,7 @@ fun CantinaPastelTheme(
 object CoresSaldo {
     val Positivo = CoresPastel.VerdeMenta     // Verde para saldo positivo
     val Negativo = CoresPastel.CoralSuave      // Coral para saldo negativo
-    val Zerado = CoresPastel.AzulSage        // Verde sage para saldo zero
+    val Zerado = CoresPastel.PessegoPastel       // Verde sage para saldo zero
 }
 
 /**
