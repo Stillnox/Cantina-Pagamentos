@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -195,7 +196,7 @@ private fun LoginHeader() {
     Text(
         text = "Faça login para continuar",
         style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        color = CoresPastel.AzulCeuPastel
     )
 }
 
@@ -244,7 +245,13 @@ private fun LoginEmailField(
         enabled = !isCarregando,
         leadingIcon = {
             Text("📧", style = MaterialTheme.typography.titleLarge)
-        }
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = CoresPastel.VerdeMenta,
+            unfocusedTextColor = CoresPastel.VerdeMenta,
+            focusedLabelColor = CoresPastel.AzulCeuPastel,
+            unfocusedLabelColor = CoresPastel.AzulCeuPastel,
+        )
     )
 }
 
@@ -283,7 +290,13 @@ private fun LoginPasswordField(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-        }
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = CoresPastel.VerdeMenta,
+            unfocusedTextColor = CoresPastel.VerdeMenta,
+            focusedLabelColor = CoresPastel.AzulCeuPastel,
+            unfocusedLabelColor = CoresPastel.AzulCeuPastel,
+        )
     )
 }
 
@@ -311,7 +324,8 @@ private fun LoginButton(
         } else {
             Text(
                 text = "Entrar",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = CoresPastel.VerdeMenta
             )
         }
     }
