@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -314,7 +315,11 @@ private fun LoginButton(
     Button(
         onClick = { onLoginClick(loginState.email, loginState.senha) },
         modifier = Modifier.fillMaxWidth(),
-        enabled = isButtonEnabled
+        enabled = isButtonEnabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = CoresPastel.VerdeMenta,
+            contentColor = CoresTexto.Principal
+        )
     ) {
         if (isCarregando) {
             CircularProgressIndicator(
@@ -324,8 +329,7 @@ private fun LoginButton(
         } else {
             Text(
                 text = "Entrar",
-                style = MaterialTheme.typography.titleMedium,
-                color = CoresPastel.VerdeMenta
+                style = MaterialTheme.typography.titleMedium
             )
         }
     }
