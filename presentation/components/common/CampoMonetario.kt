@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import com.cantina.pagamentos.presentation.theme.CoresPastel
 import com.cantina.pagamentos.presentation.theme.CoresTexto
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * Campo de entrada formatado para valores monetários
@@ -48,7 +49,14 @@ fun CampoMonetario(
             )
         )
     }
-
+    LaunchedEffect(valor) {
+        if (valor.isEmpty()) {
+            textFieldValue = TextFieldValue(
+                text = "",
+                selection = TextRange(0)
+            )
+        }
+    }
     OutlinedTextField(
         value = textFieldValue,
         onValueChange = { newValue ->
@@ -79,15 +87,15 @@ fun CampoMonetario(
             // Cor do texto quando digitando (focado)
             focusedTextColor = CoresPastel.VerdeMenta,
             // Cor do texto quando não está digitando
-            unfocusedTextColor = CoresTexto.Principal,
+            unfocusedTextColor = CoresPastel.AzulCeuPastel,
             // Cor da label quando focado
             focusedLabelColor = CoresPastel.VerdeMenta,
             // Cor da label quando não focado
-            unfocusedLabelColor = CoresTexto.Secundario,
+            unfocusedLabelColor = CoresPastel.AzulCeuPastel,
             // Cor da borda quando focado
             focusedBorderColor = CoresPastel.VerdeMenta,
             // Cor da borda quando não focado
-            unfocusedBorderColor = CoresTexto.Suave,
+            unfocusedBorderColor = CoresPastel.AzulCeuPastel,
             // Cor do cursor
             cursorColor = CoresPastel.VerdeMenta
         )
