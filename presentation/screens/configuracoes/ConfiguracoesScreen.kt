@@ -284,17 +284,16 @@ private fun ConfigDialogs(
     if (configState.showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { configState.onShowLogoutDialogChange(false) },
-            containerColor = CoresPastel.CinzaPerola,
             title = {
                 Text(
                     "Confirmar Logout",
-                    color = CoresTexto.Principal
+                    color = CoresPastel.CoralSuave
                 )
             },
             text = {
                 Text(
                     "Tem certeza que deseja sair da sua conta?",
-                    color = CoresTexto.Secundario
+                    color = CoresPastel.AzulCeuPastel
                 )
             },
             confirmButton = {
@@ -314,7 +313,7 @@ private fun ConfigDialogs(
                 TextButton(
                     onClick = { configState.onShowLogoutDialogChange(false) },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = CoresTexto.Principal
+                        contentColor = CoresPastel.AzulCeuPastel
                     )
                 ) {
                     Text("Cancelar")
@@ -532,7 +531,8 @@ private fun DialogAdicionarFuncionario(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Adicionar Funcionário") },
+        title = { Text("Adicionar Funcionário",
+            color = CoresPastel.VerdeMenta) },
         text = {
             Column {
                 OutlinedTextField(
@@ -540,7 +540,14 @@ private fun DialogAdicionarFuncionario(
                     onValueChange = { nome = it },
                     label = { Text("Nome Completo") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CoresPastel.VerdeMenta,
+                        unfocusedBorderColor = CoresPastel.AzulCeuPastel,
+                        focusedLabelColor = CoresPastel.VerdeMenta,
+                        unfocusedLabelColor = CoresPastel.AzulCeuPastel,
+                        focusedTextColor = CoresPastel.VerdeMenta,
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -553,7 +560,14 @@ private fun DialogAdicionarFuncionario(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CoresPastel.VerdeMenta,
+                        unfocusedBorderColor = CoresPastel.AzulCeuPastel,
+                        focusedLabelColor = CoresPastel.VerdeMenta,
+                        unfocusedLabelColor = CoresPastel.AzulCeuPastel,
+                        focusedTextColor = CoresPastel.VerdeMenta,
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -567,7 +581,14 @@ private fun DialogAdicionarFuncionario(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CoresPastel.VerdeMenta,
+                        unfocusedBorderColor = CoresPastel.AzulCeuPastel,
+                        focusedLabelColor = CoresPastel.VerdeMenta,
+                        unfocusedLabelColor = CoresPastel.AzulCeuPastel,
+                        focusedTextColor = CoresPastel.VerdeMenta,
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -578,10 +599,16 @@ private fun DialogAdicionarFuncionario(
                 ) {
                     Checkbox(
                         checked = isAdminNovo,
-                        onCheckedChange = { isAdminNovo = it }
+                        onCheckedChange = { isAdminNovo = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = CoresPastel.AzulCeuPastel,
+                            uncheckedColor = CoresPastel.AzulCeuPastel,
+                            checkmarkColor = CoresTexto.Principal
+                        )
                     )
                     Text(
                         text = "Administrador",
+                        color = CoresPastel.AzulCeuPastel,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -613,12 +640,12 @@ private fun DialogAdicionarFuncionario(
                 },
                 enabled = nome.isNotEmpty() && email.isNotEmpty() && senha.length >= 6
             ) {
-                Text("Criar")
+                Text("Criar", color = CoresPastel.VerdeMenta)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text("Cancelar", color = CoresPastel.CoralSuave)
             }
         }
     )
