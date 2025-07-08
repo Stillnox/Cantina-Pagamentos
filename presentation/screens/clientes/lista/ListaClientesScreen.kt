@@ -530,8 +530,7 @@ private fun ListaSearchField(listaState: ListaState) {
         onValueChange = listaState.onBuscaChange,
         label = { Text("Buscar por nome") },  // Voltando para label
         modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp),  // Altura ligeiramente maior para não cortar
+            .fillMaxWidth(), // Altura ligeiramente maior para não cortar
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             // Borda
