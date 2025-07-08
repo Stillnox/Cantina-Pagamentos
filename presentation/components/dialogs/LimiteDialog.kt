@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.cantina.pagamentos.presentation.components.common.CampoMonetario
 import com.cantina.pagamentos.presentation.theme.CoresPastel
 
@@ -45,20 +46,21 @@ fun DialogAlterarLimite(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = {
             Text(
                 "Configurações",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 20.sp // ✅ Aumentado em ~4.dp (titleMedium é ~16sp + 4sp = 20sp)
+                    fontSize = 20.sp
                 ),
-                color = CoresPastel.AzulCeuPastel // ✅ Cor azul céu aplicada
+                color = CoresPastel.AzulCeuPastel
             )
         },
         text = {
             Column {
                 Text(
                     "Limite negativo atual: R$ %.2f".format(limiteAtual),
-                    color = CoresPastel.VerdeMenta // ✅ Cor verde menta aplicada
+                    color = CoresPastel.VerdeMenta
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 CampoMonetario(
