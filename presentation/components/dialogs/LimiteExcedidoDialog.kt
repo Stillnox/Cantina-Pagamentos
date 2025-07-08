@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.cantina.pagamentos.presentation.theme.CoresPastel
 
 
 /**
@@ -35,14 +36,15 @@ fun DialogLimiteExcedido(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("❌ ", style = MaterialTheme.typography.headlineMedium)
-                Text("Compra Não Autorizada")
+                Text("Compra Não Autorizada", color = CoresPastel.CoralSuave)
             }
         },
         text = {
             Column {
                 Text(
                     text = mensagem,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CoresPastel.AzulCeuPastel
                 )
 
                 // Mostra sugestão para admin
