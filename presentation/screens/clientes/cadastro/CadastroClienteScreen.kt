@@ -303,6 +303,12 @@ private fun CadastroNomeField(cadastroState: CadastroState) {
             unfocusedBorderColor = CoresPastel.VerdeMenta,
             focusedLabelColor = CoresPastel.VerdeMenta,
             unfocusedLabelColor = CoresPastel.VerdeMenta,
+            focusedTextColor = CoresPastel.VerdeMenta,
+            unfocusedTextColor = CoresPastel.VerdeMenta,
+            errorBorderColor = MaterialTheme.colorScheme.error,
+            errorTextColor = MaterialTheme.colorScheme.error,
+            errorLabelColor = MaterialTheme.colorScheme.error,
+            errorCursorColor = MaterialTheme.colorScheme.error,
         )
     )
 }
@@ -341,6 +347,12 @@ private fun CadastroDataField(cadastroState: CadastroState) {
             unfocusedBorderColor = CoresPastel.VerdeMenta,
             focusedLabelColor = CoresPastel.VerdeMenta,
             unfocusedLabelColor = CoresPastel.VerdeMenta,
+            focusedTextColor = CoresPastel.VerdeMenta,
+            unfocusedTextColor = CoresPastel.VerdeMenta,
+            errorBorderColor = MaterialTheme.colorScheme.error,
+            errorTextColor = MaterialTheme.colorScheme.error,
+            errorLabelColor = MaterialTheme.colorScheme.error,
+            errorCursorColor = MaterialTheme.colorScheme.error,
         )
     )
 }
@@ -406,6 +418,8 @@ private fun CadastroTelefoneField(cadastroState: CadastroState) {
             unfocusedBorderColor = CoresPastel.VerdeMenta,
             focusedLabelColor = CoresPastel.VerdeMenta,
             unfocusedLabelColor = CoresPastel.VerdeMenta,
+            focusedTextColor = CoresPastel.VerdeMenta,
+            unfocusedTextColor = CoresPastel.VerdeMenta,
         )
     )
 }
