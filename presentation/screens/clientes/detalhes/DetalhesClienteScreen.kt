@@ -202,7 +202,8 @@ fun TelaClienteFirebase(
         viewModel = viewModel,
         clienteId = clienteId,
         navController = navController,
-        isDualPane = isDualPane
+        isDualPane = isDualPane,
+        context = context
     )
 }
 
@@ -340,7 +341,8 @@ fun TelaClienteFirebaseDual(
         clienteState = clienteState,
         viewModel = viewModel,
         clienteId = clienteId,
-        onClose = onClose
+        onClose = onClose,
+        context = context
     )
 }
 
@@ -430,12 +432,17 @@ private fun ClienteTopBar(
         title = {
             Text(
                 cliente?.nomeCompleto ?: "Carregando...",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 26.sp,
+                    lineHeight = 28.sp  // Adiciona esta linha para reduzir o espaçamento
+                ),
+                color = CoresPastel.AzulCeuPastel
             )
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Text("←", style = MaterialTheme.typography.headlineMedium)
+                Text("←", style = MaterialTheme.typography.headlineMedium,
+                          color = CoresPastel.AzulCeuPastel)
             }
         },
         actions = {
@@ -446,9 +453,6 @@ private fun ClienteTopBar(
                         .padding(end = 8.dp),
                     strokeWidth = 2.dp
                 )
-            }
-            IconButton(onClick = onExportClick, enabled = !isCarregando && cliente != null) {
-                Text("📄", style = MaterialTheme.typography.headlineSmall)
             }
             if (isAdmin) {
                 Button(
@@ -490,7 +494,11 @@ private fun ClienteTopBarDual(
         title = {
             Text(
                 cliente?.nomeCompleto ?: "Carregando...",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 26.sp,
+                    lineHeight = 28.sp  // Adiciona esta linha para reduzir o espaçamento
+                ),
+                color = CoresPastel.AzulCeuPastel
             )
         },
         actions = {
@@ -704,16 +712,7 @@ private fun ClienteExtratoHeader(
             text = "Histórico de Transações",
             style = MaterialTheme.typography.titleLarge
         )
-        if (isAdmin) {
-            TextButton(
-                onClick = onRemoveClick,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Remover Cliente")
-            }
-        }
+
     }
 }
 
@@ -766,6 +765,7 @@ private fun ClienteDialogs(
     clienteId: String,
     navController: NavHostController,
     isDualPane: Boolean = false,
+    context: android.content.Context,
 ) {
     // Dialog para adicionar crédito (ADMIN)
     if (clienteState.showAddCreditDialog) {
@@ -786,7 +786,19 @@ private fun ClienteDialogs(
             onConfirm = { novoLimite ->
                 viewModel.atualizarLimiteNegativo(clienteId, novoLimite)
                 clienteState.onShowLimiteDialogChange(false)
-            }
+            },
+            onRemoverCliente = {
+                clienteState.onShowLimiteDialogChange(false)
+                clienteState.onShowRemoveDialogChange(true)
+            },
+            onExportarPdf = {
+                val uri = viewModel.gerarPdfExtratoCliente(context, clienteId)
+                if (uri != null) {
+                    viewModel.compartilharPdf(context, uri, "Extrato - ${clienteState.cliente?.nomeCompleto}")
+                }
+                clienteState.onShowLimiteDialogChange(false)
+            },
+            isAdmin = clienteState.isAdmin
         )
     }
     // Dialog para remover cliente (ADMIN)
@@ -863,6 +875,7 @@ private fun ClienteDialogsDual(
     viewModel: CantinaFirebaseViewModel,
     clienteId: String,
     onClose: () -> Unit,
+    context: android.content.Context,
 ) {
     // Dialog para adicionar crédito (ADMIN)
     if (clienteState.showAddCreditDialog) {
@@ -877,16 +890,26 @@ private fun ClienteDialogsDual(
     }
 
     // Dialog para alterar limite (ADMIN)
-    if (clienteState.showLimiteDialog) {
-        DialogAlterarLimite(
-            limiteAtual = clienteState.cliente?.limiteNegativo ?: -50.0,
-            onDismiss = { clienteState.onShowLimiteDialogChange(false) },
-            onConfirm = { novoLimite ->
-                viewModel.atualizarLimiteNegativo(clienteId, novoLimite)
-                clienteState.onShowLimiteDialogChange(false)
+    DialogAlterarLimite(
+        limiteAtual = clienteState.cliente?.limiteNegativo ?: -50.0,
+        onDismiss = { clienteState.onShowLimiteDialogChange(false) },
+        onConfirm = { novoLimite ->
+            viewModel.atualizarLimiteNegativo(clienteId, novoLimite)
+            clienteState.onShowLimiteDialogChange(false)
+        },
+        onRemoverCliente = {
+            clienteState.onShowLimiteDialogChange(false)
+            clienteState.onShowRemoveDialogChange(true)
+        },
+        onExportarPdf = {
+            val uri = viewModel.gerarPdfExtratoCliente(context, clienteId)
+            if (uri != null) {
+                viewModel.compartilharPdf(context, uri, "Extrato - ${clienteState.cliente?.nomeCompleto}")
             }
-        )
-    }
+            clienteState.onShowLimiteDialogChange(false)
+        },
+        isAdmin = clienteState.isAdmin
+    )
 
     // Dialog para remover cliente (ADMIN)
     if (clienteState.showRemoveDialog) {
