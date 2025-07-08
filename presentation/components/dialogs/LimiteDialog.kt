@@ -1,10 +1,15 @@
 package com.cantina.pagamentos.presentation.components.dialogs
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,6 +32,9 @@ fun DialogAlterarLimite(
     limiteAtual: Double,
     onDismiss: () -> Unit,
     onConfirm: (Double) -> Unit,
+    onRemoverCliente: () -> Unit,
+    onExportarPdf: () -> Unit,
+    isAdmin: Boolean,
 ) {
     var novoLimite by remember {
         mutableStateOf(
@@ -57,6 +65,32 @@ fun DialogAlterarLimite(
                     onValueChange = { novoLimite = it },
                     label = "Novo limite"
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                if (isAdmin) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Botão Exportar PDF
+                        OutlinedButton(
+                            onClick = onExportarPdf,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("📄 Exportar PDF")
+                        }
+
+                        // Botão Remover Cliente
+                        OutlinedButton(
+                            onClick = onRemoverCliente,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("🗑️ Remover")
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
