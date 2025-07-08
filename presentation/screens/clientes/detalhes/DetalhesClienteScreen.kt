@@ -2,6 +2,7 @@ package com.cantina.pagamentos.presentation.screens.clientes.detalhes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -168,13 +170,13 @@ fun TelaClienteFirebase(
                                 Text(
                                     text = "Nenhuma transação realizada ainda",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = CoresPastel.AzulCeuPastel,
                                     textAlign = TextAlign.Center
                                 )
                                 Text(
                                     text = "As compras e créditos aparecerão aqui",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = CoresPastel.AzulCeuPastel,
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -314,7 +316,7 @@ fun TelaClienteFirebaseDual(
                                 Text(
                                     text = "Nenhuma transação realizada ainda",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = CoresPastel.AzulCeuPastel,
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -458,6 +460,7 @@ private fun ClienteTopBar(
                 Button(
                     onClick = onAddCreditClick,
                     enabled = !isCarregando,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = CoresPastel.VerdeMenta,
                         contentColor = CoresTexto.Principal
@@ -465,11 +468,12 @@ private fun ClienteTopBar(
                 ) {
                     Text("+ Crédito")
                 }
+                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = onConfigClick,
                     enabled = !isCarregando
                 ) {
-                    Text("⚙", style = MaterialTheme.typography.headlineMedium)
+                    Text("⚙", style = MaterialTheme.typography.headlineMedium, color = CoresPastel.VerdeMenta)
                 }
             }
         },
@@ -510,13 +514,11 @@ private fun ClienteTopBarDual(
                     strokeWidth = 2.dp
                 )
             }
-            IconButton(onClick = onExportClick, enabled = !isCarregando && cliente != null) {
-                Text("📄", style = MaterialTheme.typography.headlineSmall)
-            }
             if (isAdmin) {
                 Button(
                     onClick = onAddCreditClick,
                     enabled = !isCarregando,
+                    contentPadding = PaddingValues(horizontal = 200.dp, vertical = 200.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = CoresPastel.VerdeMenta,
                         contentColor = CoresTexto.Principal
@@ -524,11 +526,12 @@ private fun ClienteTopBarDual(
                 ) {
                     Text("+ Crédito")
                 }
+                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = onConfigClick,
                     enabled = !isCarregando
                 ) {
-                    Text("⚙", style = MaterialTheme.typography.headlineMedium)
+                    Text("⚙", style = MaterialTheme.typography.headlineMedium, color = CoresPastel.VerdeMenta)
                 }
             }
         }
@@ -597,7 +600,7 @@ private fun ClienteCompraCard(
                 text = "Realizar Compra",
                 style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
                 modifier = Modifier.padding(bottom = 6.dp),
-                color = CoresTexto.Principal
+                color = CoresPastel.AzulCeuPastel
             )
             CampoMonetario(
                 valor = valorOperacao,
@@ -638,7 +641,7 @@ private fun ClienteCompraButton(
         enabled = !isCarregando && valorOperacao.isNotEmpty(),
         colors = ButtonDefaults.buttonColors(
             disabledContainerColor = CoresPastel.CinzaPerola,
-            disabledContentColor = CoresTexto.Secundario,
+            disabledContentColor = CoresPastel.AzulCeuPastel,
             containerColor = CoresPastel.VerdeMenta,
             contentColor = CoresTexto.Principal
         )
@@ -649,7 +652,7 @@ private fun ClienteCompraButton(
                 color = MaterialTheme.colorScheme.onPrimary
             )
         } else {
-            Text("Confirmar Compra", style = MaterialTheme.typography.titleMedium)
+            Text("Confirmar Compra", style = MaterialTheme.typography.titleMedium,)
         }
     }
 }
@@ -704,7 +707,7 @@ private fun ClienteExtratoHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -805,8 +808,8 @@ private fun ClienteDialogs(
     if (clienteState.showRemoveDialog) {
         AlertDialog(
             onDismissRequest = { clienteState.onShowRemoveDialogChange(false) },
-            title = { Text("Confirmar Exclusão") },
-            text = { Text(Const.MSG_CONFIRMAR_EXCLUSAO) },
+            title = { Text("Confirmar Exclusão", color = CoresPastel.CoralSuave) },
+            text = { Text(Const.MSG_CONFIRMAR_EXCLUSAO, color = CoresPastel.AzulCeuPastel) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -831,10 +834,12 @@ private fun ClienteDialogs(
     }
     // Dialog de sucesso - Crédito
     if (clienteState.showCreditoDialog) {
+
+
         AlertDialog(
             onDismissRequest = { clienteState.onShowCreditoDialogChange(false) },
-            title = { Text(Const.MSG_SUCESSO) },
-            text = { Text(Const.MSG_CREDITO_ADICIONADO) },
+            title = { Text(Const.MSG_SUCESSO, color = CoresPastel.VerdeMenta) },
+            text = { Text(Const.MSG_CREDITO_ADICIONADO, color = CoresPastel.AzulCeuPastel) },
             confirmButton = {
                 TextButton(onClick = { clienteState.onShowCreditoDialogChange(false) }) {
                     Text("OK")
@@ -846,8 +851,8 @@ private fun ClienteDialogs(
     if (clienteState.showDebitoDialog) {
         AlertDialog(
             onDismissRequest = { clienteState.onShowDebitoDialogChange(false) },
-            title = { Text(Const.MSG_SUCESSO) },
-            text = { Text(Const.MSG_COMPRA_REALIZADA) },
+            title = { Text(Const.MSG_SUCESSO, color = CoresPastel.VerdeMenta) },
+            text = { Text(Const.MSG_COMPRA_REALIZADA, color = CoresPastel.AzulCeuPastel) },
             confirmButton = {
                 TextButton(onClick = { clienteState.onShowDebitoDialogChange(false) }) {
                     Text("OK")
@@ -915,8 +920,8 @@ private fun ClienteDialogsDual(
     if (clienteState.showRemoveDialog) {
         AlertDialog(
             onDismissRequest = { clienteState.onShowRemoveDialogChange(false) },
-            title = { Text("Confirmar Exclusão") },
-            text = { Text(Const.MSG_CONFIRMAR_EXCLUSAO) },
+            title = { Text("Confirmar Exclusão", color = CoresPastel.CoralSuave) },
+            text = { Text(Const.MSG_CONFIRMAR_EXCLUSAO, color = CoresPastel.AzulCeuPastel) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -941,7 +946,7 @@ private fun ClienteDialogsDual(
         AlertDialog(
             onDismissRequest = { clienteState.onShowCreditoDialogChange(false) },
             title = { Text(Const.MSG_SUCESSO) },
-            text = { Text(Const.MSG_CREDITO_ADICIONADO) },
+            text = { Text(Const.MSG_CREDITO_ADICIONADO, color = CoresPastel.AzulCeuPastel) },
             confirmButton = {
                 TextButton(onClick = { clienteState.onShowCreditoDialogChange(false) }) {
                     Text("OK")
@@ -955,7 +960,7 @@ private fun ClienteDialogsDual(
         AlertDialog(
             onDismissRequest = { clienteState.onShowDebitoDialogChange(false) },
             title = { Text(Const.MSG_SUCESSO) },
-            text = { Text(Const.MSG_COMPRA_REALIZADA) },
+            text = { Text(Const.MSG_COMPRA_REALIZADA, color = CoresPastel.AzulCeuPastel) },
             confirmButton = {
                 TextButton(onClick = { clienteState.onShowDebitoDialogChange(false) }) {
                     Text("OK")
@@ -998,6 +1003,7 @@ private fun handleCompra(
             clienteState.onShowLimiteExcedidoDialogChange(true)
             clienteState.onValorOperacaoChange("")
         } else {
+            clienteState.onValorOperacaoChange("")
             viewModel.realizarCompra(clienteId, valor) { sucesso, mensagem ->
                 if (sucesso) {
                     clienteState.onShowDebitoDialogChange(true)
@@ -1005,7 +1011,6 @@ private fun handleCompra(
                     clienteState.onMensagemLimiteExcedidoChange(mensagem)
                     clienteState.onShowLimiteExcedidoDialogChange(true)
                 }
-                clienteState.onValorOperacaoChange("")
             }
         }
     }
